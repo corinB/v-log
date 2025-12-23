@@ -23,6 +23,9 @@ public class Post {
     private String title;
     private String content;
 
+    @Column(name = "view_count")
+    private int viewCount;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "blog_id")
     private Blog blog;

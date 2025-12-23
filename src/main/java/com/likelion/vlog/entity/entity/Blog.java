@@ -18,7 +18,8 @@ public class Blog {
     @Column(name = "blog_id")
     private Long id;
 
-    @OneToOne(mappedBy = "blog", fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
 
 //    @OneToMany(mappedBy = "blog")
