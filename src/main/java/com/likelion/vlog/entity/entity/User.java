@@ -33,6 +33,18 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    public void updateNickName(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
+    }
+
+    public void updateUpdatedAt() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public static User of(SignupRequestDto signupRequestDto, PasswordEncoder passwordEncoder){
         User user = new User();
         user.setEmail(signupRequestDto.getEmail());

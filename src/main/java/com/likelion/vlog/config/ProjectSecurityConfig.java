@@ -38,10 +38,11 @@ public class ProjectSecurityConfig {
                         // 인증 X
                         .requestMatchers(HttpMethod.POST, "/auth/signup", "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/users/**").permitAll()
 
                         // 인증 O
                         .requestMatchers(HttpMethod.POST, "/auth/logout").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/users/**").authenticated()
+                        // .requestMatchers(HttpMethod.PUT, "/users/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/users/**").authenticated()
 
                         .anyRequest().denyAll()

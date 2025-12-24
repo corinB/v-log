@@ -1,0 +1,7 @@
+PUT http://localhost:8080/users/5
+Content-Type: application/json
+
+{
+  "nickname": "test567",
+  "password": "test567"
+}
