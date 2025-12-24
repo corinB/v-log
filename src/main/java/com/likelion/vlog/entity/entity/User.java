@@ -1,10 +1,12 @@
 package com.likelion.vlog.entity.entity;
 
+import com.likelion.vlog.dto.auth.SignupRequestDto;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 
@@ -18,7 +20,7 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private Blog blog;
 
 //    @OneToMany(mappedBy = "user")
@@ -31,5 +33,13 @@ public class User {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    public static User of(SignupRequestDto signupRequestDto, PasswordEncoder passwordEncoder){
+        User user = new User();
+        user.setEmail(signupRequestDto.getEmail());
+        user.setPassword(passwordEncoder.encode(signupRequestDto.getPassword()));
+        user.setNickname(signupRequestDto.getNickname());
+        return user;
+    }
 
 }

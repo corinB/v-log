@@ -25,7 +25,6 @@ public class Blog {
 //    @OneToMany(mappedBy = "blog")
 //    private List<Post> posts = new ArrayList<>();
 
-    private Long user_id;
     private String title;
 
     private LocalDateTime created_at;
