@@ -2,9 +2,7 @@ package com.likelion.vlog.controller;
 
 import com.likelion.vlog.dto.common.ApiResponse;
 import com.likelion.vlog.dto.user.UserDto;
-import com.likelion.vlog.dto.user.UserUpdateResponseDto;
 import com.likelion.vlog.dto.user.UserUpdateRequestDto;
-import com.likelion.vlog.entity.User;
 import com.likelion.vlog.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -17,24 +17,17 @@ import java.util.List;
 public class PostListResponse {
     private Long postId;
     private String title;
-    private String summary;         // content의 앞 100자 + "..."
+    private String content;
     private AuthorResponse author;
-    private List<String> tags;
     private LocalDateTime createdAt;
 
-    public static PostListResponse of(Post post, List<String> tags) {
-        // content를 100자로 잘라서 summary 생성
-        String summary = post.getContent();
-        if (summary != null && summary.length() > 100) {
-            summary = summary.substring(0, 100) + "...";
-        }
+    public static PostListResponse of(Post post) {
 
         return PostListResponse.builder()
                 .postId(post.getId())
                 .title(post.getTitle())
-                .summary(summary)
+                .content(post.getContent())
                 .author(AuthorResponse.from(post.getBlog().getUser()))
-                .tags(tags)
                 .createdAt(post.getCreatedAt())
                 .build();
     }

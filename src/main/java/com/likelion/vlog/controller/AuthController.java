@@ -9,6 +9,7 @@ import com.likelion.vlog.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,7 +17,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +30,7 @@ public class AuthController {
     private final SecurityContextRepository securityContextRepository;
 
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<UserDto>> signup(@RequestBody SignupRequestDto dto) {
+    public ResponseEntity<ApiResponse<UserDto>> signup(@Valid @RequestBody SignupRequestDto dto) {
         UserDto userDto = authService.signup(dto);
         return ResponseEntity.ok(ApiResponse.success("회원가입 성공", userDto));
     }

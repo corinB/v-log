@@ -17,7 +17,6 @@ import java.util.List;
 
 /**
  * 게시글 비즈니스 로직
- * - @Transactional(readOnly = true): 기본적으로 읽기 전용 (성능 최적화)
  * - 쓰기 메서드에만 @Transactional 추가
  */
 @Service
@@ -55,10 +54,7 @@ public class PostService {
 
         // Entity -> DTO 변환
         List<PostListResponse> content = posts.stream()
-                .map(post -> {
-                    List<String> tags = getTagNames(post);
-                    return PostListResponse.of(post, tags);
-                })
+                .map(PostListResponse::of)
                 .toList();
 
         return PageResponse.of(postPage, content);

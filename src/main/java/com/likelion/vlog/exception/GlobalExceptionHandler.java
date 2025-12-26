@@ -40,6 +40,37 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 409 Conflict - 중복 데이터
+     */
+    @ExceptionHandler(DuplicateException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateException(DuplicateException e) {
+        log.warn("DuplicateException: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(errorResponse(HttpStatus.CONFLICT, e.getMessage()));
+    }
+
+    /**
+     * 400 Bad Request - 잘못된 요청
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException e) {
+        log.warn("IllegalArgumentException: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse(HttpStatus.BAD_REQUEST, e.getMessage()));
+    }
+
+    /**
+     * 401 Unauthorized - 인증 실패
+     */
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    public ResponseEntity<Map<String, Object>> handleBadCredentialsException(
+            org.springframework.security.authentication.BadCredentialsException e) {
+        log.warn("BadCredentialsException: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(errorResponse(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다."));
+    }
+
+    /**
      * 400 Bad Request - Validation 실패
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
