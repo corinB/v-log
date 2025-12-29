@@ -18,6 +18,7 @@ public class Tag extends BaseEntity {
     @Column(name = "tag_id")
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private String title;
 
     @OneToMany(mappedBy = "tag", fetch = FetchType.LAZY)

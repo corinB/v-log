@@ -3,10 +3,7 @@ package com.likelion.vlog.entity;
 import com.likelion.vlog.dto.auth.SignupRequest;
 import com.likelion.vlog.dto.users.UserUpdateRequest;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,10 +11,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDateTime;
 
 @Entity
-@Getter @Setter
+@Getter
 @Table(name = "users")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+public class User extends  BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
@@ -29,21 +26,17 @@ public class User {
 //    @OneToMany(mappedBy = "user")
 //    private List<Comment> comments =  new ArrayList<>();
 
+    @Column(unique = true, nullable = false)
     private String email;
+    @Column(nullable = false)
     private String password;
+    @Column(unique = true, nullable = false)
     private String nickname;
 
-    @CurrentTimestamp
-    private LocalDateTime createdAt;
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 
     @PrePersist
     private void prePersist() {
-        Blog blog = new  Blog();
-        blog.setUser(this);
-        blog.setTitle(this.nickname + "의 블로그");
-        this.blog = blog;
+        this.blog = Blog.create(this);
     }
 
 
@@ -61,9 +54,9 @@ public class User {
 
     public static User of(SignupRequest signupRequest, PasswordEncoder passwordEncoder){
         User user = new User();
-        user.setEmail(signupRequest.getEmail());
-        user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
-        user.setNickname(signupRequest.getNickname());
+        user.email = signupRequest.getEmail();
+        user.password = passwordEncoder.encode(signupRequest.getPassword());
+        user.nickname = signupRequest.getNickname();
         return user;
     }
 

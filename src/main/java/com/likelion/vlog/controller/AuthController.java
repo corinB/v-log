@@ -21,7 +21,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/tags/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;

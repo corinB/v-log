@@ -7,7 +7,15 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "tag_maps")
+@Table(
+        name = "tag_maps",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "unique_post_tag",
+                        columnNames = {"post_id", "tag_id"}
+                )
+        }
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TagMap extends BaseEntity {
 
@@ -17,11 +25,11 @@ public class TagMap extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
+    @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tag_id")
+    @JoinColumn(name = "tag_id", nullable = false)
     private Tag tag;
 
     // TagMap 생성 메서드

@@ -36,17 +36,49 @@ public class ProjectSecurityConfig {
         http.cors(withDefaults());
         http.authorizeHttpRequests(auth -> auth
                         // 인증 X
-                        .requestMatchers(HttpMethod.POST, "/auth/signup", "/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/users/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/tags/users/**", //사용자 조회
+                                "/api/v1/tags/**", //태그 조회
+                                "/api/v1/posts/**" //게시글 조회
+                        ).permitAll()
+
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/tags/auth/signup", //회원가입
+                                "/api/v1/tags/auth/login" //로그인
+                        ).permitAll()
+
+        //-------------------------------------------------------------------------------------
 
                         // 인증 O
-                        .requestMatchers(HttpMethod.POST, "/auth/logout").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/users/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/users/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/posts").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/posts/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/posts/**").authenticated()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/users/**/followers", //팔로워 조회
+                                "/api/v1/users/**/followings" //팔로잉 조회
+                        ).authenticated()
+
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/tags/auth/logout", //로그아웃
+                                "/api/v1/posts", //게시글 생성
+                                "/api/v1/posts/**/comments", //댓글 생성
+                                "api/v1/posts/**/comments/**/replies", //대댓글 생성
+                                "/api/v1/users/**/follow" //팔로우
+                        ).authenticated()
+
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/v1/tags/users/**", //사용자 정보 수정
+                                "/api/v1/posts/**", //게시글 수정
+                                "api/v1/posts/**/comments/**", //댓글 수정
+                                "api/v1/posts/**/comments/**/replies/**", //대댓글 수정
+                                "/posts/{post_id}/like" //좋아요
+                        ).authenticated()
+
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/v1/tags/users/**", //사용자 삭제
+                                "/api/v1/posts/**", //게시글 삭제
+                                "api/v1/posts/**/comments/**", //댓글 삭제
+                                "api/v1/posts/**/comments/**/replies/**", //대댓글 삭제
+                                "/posts/{post_id}/like", //좋아요 취소
+                                "/api/v1/users/**/follow" //팔로우 취소
+                        ).authenticated()
 
                         .anyRequest().denyAll()
                 );

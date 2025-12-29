@@ -20,21 +20,22 @@ public class Comment extends BaseEntity {
 
     // 댓글 작성자
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     // 어느 게시글의 댓글인지
     @ManyToOne (fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
+    @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
     // 어떤 댓글에 대한 대댓글인지
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
-    private List<Comment> children = new ArrayList<>();
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Comment parent;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    private List<Comment> children = new ArrayList<>();
+
 
     private String content;
 

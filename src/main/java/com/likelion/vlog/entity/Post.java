@@ -20,7 +20,8 @@ public class Post extends BaseEntity {
 
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
+    @Column(columnDefinition = "MEDIUMTEXT")
     private String content;
 
     @Column(name = "view_count")
@@ -30,7 +31,7 @@ public class Post extends BaseEntity {
     @JoinColumn(name = "blog_id")
     private Blog blog;
 
-    @OneToMany(mappedBy = "post")
+    @OneToMany(mappedBy = "post", orphanRemoval = true)
     private List<TagMap> tagMapList = new ArrayList<>();
 
     // 게시글 생성 메서드
