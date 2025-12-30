@@ -40,7 +40,7 @@ public class Comment extends BaseEntity {
     private String content;
 
     // 댓글 생성 메서드
-    public static Comment create(User user, Post post, String content) {
+    public static Comment of(User user, Post post, String content) {
         Comment comment = new Comment();
         comment.user = user;
         comment.post = post;
@@ -49,7 +49,7 @@ public class Comment extends BaseEntity {
     }
 
     // 대댓글 생성 메서드
-    public static Comment createReply(User user, Post post, Comment parent, String content) {
+    public static Comment ofReply(User user, Post post, Comment parent, String content) {
         Comment reply = new Comment();
         reply.user = user;
         reply.post = post;

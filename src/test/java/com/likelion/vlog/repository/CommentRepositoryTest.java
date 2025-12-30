@@ -36,7 +36,7 @@ class CommentRepositoryTest {
 
         blog = user.getBlog();
 
-        post = Post.create("테스트 글", "테스트 내용", blog);
+        post = Post.of("테스트 글", "테스트 내용", blog);
         em.persist(post);
 
         em.flush();
@@ -55,12 +55,12 @@ class CommentRepositoryTest {
         @DisplayName("게시글의 최상위 댓글만 조회")
         void findAllByPostAndParentIsNull_Success() {
             // given
-            Comment parent1 = Comment.create(user, post, "부모 댓글 1");
-            Comment parent2 = Comment.create(user, post, "부모 댓글 2");
+            Comment parent1 = Comment.of(user, post, "부모 댓글 1");
+            Comment parent2 = Comment.of(user, post, "부모 댓글 2");
             em.persist(parent1);
             em.persist(parent2);
 
-            Comment reply = Comment.createReply(user, post, parent1, "대댓글");
+            Comment reply = Comment.ofReply(user, post, parent1, "대댓글");
             em.persist(reply);
             em.flush();
             em.clear();
@@ -79,11 +79,11 @@ class CommentRepositoryTest {
         @DisplayName("Fetch Join으로 댓글과 대댓글 함께 조회")
         void findAllByPostWithChildren_Success() {
             // given
-            Comment parent = Comment.create(user, post, "부모 댓글");
+            Comment parent = Comment.of(user, post, "부모 댓글");
             em.persist(parent);
 
-            Comment reply1 = Comment.createReply(user, post, parent, "대댓글 1");
-            Comment reply2 = Comment.createReply(user, post, parent, "대댓글 2");
+            Comment reply1 = Comment.ofReply(user, post, parent, "대댓글 1");
+            Comment reply2 = Comment.ofReply(user, post, parent, "대댓글 2");
             em.persist(reply1);
             em.persist(reply2);
             em.flush();
@@ -108,9 +108,9 @@ class CommentRepositoryTest {
         @DisplayName("게시글의 댓글 수 조회")
         void countByPost_Success() {
             // given
-            Comment c1 = Comment.create(user, post, "댓글 1");
-            Comment c2 = Comment.create(user, post, "댓글 2");
-            Comment c3 = Comment.create(user, post, "댓글 3");
+            Comment c1 = Comment.of(user, post, "댓글 1");
+            Comment c2 = Comment.of(user, post, "댓글 2");
+            Comment c3 = Comment.of(user, post, "댓글 3");
             em.persist(c1);
             em.persist(c2);
             em.persist(c3);
@@ -130,12 +130,12 @@ class CommentRepositoryTest {
         @DisplayName("여러 게시글의 댓글 수 벌크 조회")
         void countByPosts_Success() {
             // given
-            Post post2 = Post.create("테스트 글 2", "내용 2", blog);
+            Post post2 = Post.of("테스트 글 2", "내용 2", blog);
             em.persist(post2);
 
-            Comment c1 = Comment.create(user, post, "댓글 1");
-            Comment c2 = Comment.create(user, post, "댓글 2");
-            Comment c3 = Comment.create(user, post2, "댓글 3");
+            Comment c1 = Comment.of(user, post, "댓글 1");
+            Comment c2 = Comment.of(user, post, "댓글 2");
+            Comment c3 = Comment.of(user, post2, "댓글 3");
             em.persist(c1);
             em.persist(c2);
             em.persist(c3);

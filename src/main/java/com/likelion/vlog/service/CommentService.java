@@ -48,7 +48,7 @@ public class CommentService {
         Post post = findPostById(postId);
         User user = findUserByEmail(email);
 
-        Comment comment = Comment.create(user, post, request.getContent());
+        Comment comment = Comment.of(user, post, request.getContent());
         Comment savedComment = commentRepository.save(comment);
 
         return CommentPostResponse.from(savedComment);
@@ -99,7 +99,7 @@ public class CommentService {
 
         User user = findUserByEmail(email);
 
-        Comment reply = Comment.createReply(user, post, parentComment, request.getContent());
+        Comment reply = Comment.ofReply(user, post, parentComment, request.getContent());
         Comment savedReply = commentRepository.save(reply);
 
         return ReplyPostResponse.from(savedReply);

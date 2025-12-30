@@ -97,7 +97,7 @@ public class PostService {
                 .orElseThrow(() -> NotFoundException.blog(user.getId()));
 
         // Post 생성 (정적 팩토리 메서드 사용)
-        Post post = Post.create(request.getTitle(), request.getContent(), blog);
+        Post post = Post.of(request.getTitle(), request.getContent(), blog);
         Post savedPost = postRepository.save(post);
 
         // 태그 저장 (없는 태그는 새로 생성)
@@ -173,10 +173,10 @@ public class PostService {
                 .map(tagName -> {
                     // 태그 조회 또는 생성 (정적 팩토리 메서드 사용)
                     Tag tag = tagRepository.findByTitle(tagName)
-                            .orElseGet(() -> tagRepository.save(Tag.create(tagName)));
+                            .orElseGet(() -> tagRepository.save(Tag.of(tagName)));
 
                     // Post-Tag 매핑 생성 (정적 팩토리 메서드 사용)
-                    TagMap tagMap = TagMap.create(post, tag);
+                    TagMap tagMap = TagMap.of(post, tag);
                     tagMapRepository.save(tagMap);
 
                     return tagName;

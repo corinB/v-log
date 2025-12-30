@@ -33,7 +33,7 @@ public class TagMap extends BaseEntity {
     private Tag tag;
 
     // TagMap 생성 메서드
-    public static TagMap create(Post post, Tag tag) {
+    public static TagMap of(Post post, Tag tag) {
         TagMap tagMap = new TagMap();
         tagMap.post = post;
         tagMap.tag = tag;

@@ -25,7 +25,7 @@ public class Tag extends BaseEntity {
     private List<TagMap> tagMapList = new ArrayList<>();
 
     // 태그 생성 메서드
-    public static Tag create(String title) {
+    public static Tag of(String title) {
         Tag tag = new Tag();
         tag.title = title;
         return tag;

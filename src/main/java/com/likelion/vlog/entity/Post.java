@@ -35,7 +35,7 @@ public class Post extends BaseEntity {
     private List<TagMap> tagMapList = new ArrayList<>();
 
     // 게시글 생성 메서드
-    public static Post create(String title, String content, Blog blog) {
+    public static Post of(String title, String content, Blog blog) {
         Post post = new Post();
         post.title = title;
         post.content = content;
