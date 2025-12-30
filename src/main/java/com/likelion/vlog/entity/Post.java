@@ -25,7 +25,10 @@ public class Post extends BaseEntity {
     private String content;
 
     @Column(name = "view_count")
-    private int viewCount;
+    private Integer viewCount;
+
+    @Column(name = "like_count")
+    private Integer likeCount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "blog_id")
@@ -41,6 +44,7 @@ public class Post extends BaseEntity {
         post.content = content;
         post.blog = blog;
         post.viewCount = 0;
+        post.likeCount = 0;
         return post;
     }
 
@@ -49,4 +53,16 @@ public class Post extends BaseEntity {
         this.title = title;
         this.content = content;
     }
+
+    public void like() {
+        this.likeCount = (this.likeCount == null ? 0 : this.likeCount) + 1;
+    }
+
+
+    public void unlike() {
+        if (this.likeCount != null && this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
+
 }

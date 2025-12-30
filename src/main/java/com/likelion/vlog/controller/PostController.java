@@ -1,6 +1,7 @@
 package com.likelion.vlog.controller;
 
 import com.likelion.vlog.dto.posts.PostCreateRequest;
+import com.likelion.vlog.dto.posts.PostGetRequest;
 import com.likelion.vlog.dto.posts.PostUpdateRequest;
 import com.likelion.vlog.dto.posts.response.PageResponse;
 import com.likelion.vlog.dto.posts.response.PostListResponse;
@@ -36,12 +37,9 @@ public class PostController {
      * - 정렬: 기본값 created_at DESC (최신순)
      */
     @GetMapping
-    public ResponseEntity<PageResponse<PostListResponse>> getPosts(
-            @RequestParam(required = false) String tag,
-            @RequestParam(required = false) Long blogId,
-            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+    public ResponseEntity<PageResponse<PostListResponse>> getPosts(@ModelAttribute PostGetRequest request) {
 
-        PageResponse<PostListResponse> response = postService.getPosts(tag, blogId, pageable);
+        PageResponse<PostListResponse> response = postService.getPosts(request);
         return ResponseEntity.ok(response);
     }
 

@@ -5,8 +5,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@AllArgsConstructor
+@AllArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public class LikeResponse {
-    private Long likeCount;
+    private Integer likeCount;
     private Boolean checkLike;
+
+    public static LikeResponse from(Integer likeCount, Boolean checkLike) {
+        return new LikeResponse(likeCount, checkLike);
+    }
 }

@@ -1,6 +1,7 @@
 package com.likelion.vlog.service;
 
 import com.likelion.vlog.dto.posts.PostCreateRequest;
+import com.likelion.vlog.dto.posts.PostGetRequest;
 import com.likelion.vlog.dto.posts.PostUpdateRequest;
 import com.likelion.vlog.dto.posts.response.PageResponse;
 import com.likelion.vlog.dto.posts.response.PostListResponse;
@@ -59,6 +60,15 @@ public class PostService {
                 .map(PostListResponse::of)
                 .toList();
 
+        return PageResponse.of(postPage, content);
+    }
+
+    public PageResponse<PostListResponse> getPosts(PostGetRequest request) {
+        Page<Post> postPage = postRepository.search(request);
+        List<Post> posts = postPage.getContent();
+        List<PostListResponse> content = posts.stream()
+                .map(PostListResponse::of)
+                .toList();
         return PageResponse.of(postPage, content);
     }
 

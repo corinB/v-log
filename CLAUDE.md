@@ -22,7 +22,7 @@ docker-compose down                # MySQL 중지
 **application.yaml** 기본 설정:
 - DB URL: `jdbc:mysql://localhost:3306/vlog`
 - DB User: `root` / Password: `1111`
-- Hibernate DDL: `create` (애플리케이션 시작 시 테이블 재생성)
+- Hibernate DDL: `update` (스키마 자동 업데이트, 데이터 유지)
 - SQL 로깅 활성화 (format_sql, bind parameter trace)
 
 **데이터베이스 설정**:
@@ -31,18 +31,23 @@ docker-compose down                # MySQL 중지
 
 ## 기술 스택
 
-Spring Boot 3.5.9 / Java 21 / JPA + MySQL / Spring Security (세션 기반)
+Spring Boot 3.5.9 / Java 21 / JPA + QueryDSL + MySQL / Spring Security (세션 기반)
 
 ## 패키지 구조
 
 ```
 com.likelion.vlog
-├── config/          # SecurityConfig
-├── controller/      # PostController, CommentController, AuthController, UserController
-├── service/         # PostService, CommentService, AuthService, UserService, UserServiceV2
-├── repository/      # JPA Repositories
-├── dto/             # Request/Response DTOs
-├── exception/       # NotFoundException, ForbiddenException, DuplicateException
+├── config/          # ProjectSecurityConfig, appConfig
+├── controller/      # PostController, LikeController, AuthController, UserController, TagController
+├── service/         # PostService, LikeService, AuthService, UserService, TagService
+├── repository/
+│   ├── querydsl/    # QueryDSL custom repositories (PostRepositoryCustom, PostRepositoryImpl)
+│   │   ├── custom/  # Custom interface & implementations
+│   │   └── expresion/ # QueryDSL expression helpers (PostExpression, TagMapExpression)
+│   └── *.java       # Standard JPA repositories
+├── dto/             # Request/Response DTOs (도메인별 패키지 구조)
+├── enums/           # SearchField, SortField, SortOrder, TagMode
+├── exception/       # NotFoundException, ForbiddenException, DuplicateException, GlobalExceptionHandler
 └── entity/          # User, Blog, Post, Comment, Tag, TagMap, Like, Follow
 ```
 
@@ -74,14 +79,15 @@ com.likelion.vlog
 | PUT | `/users/{id}` | 수정 | O |
 | DELETE | `/users/{id}` | 탈퇴 | O |
 
-### 댓글 (`/api/v1/posts/{postId}/comments`)
+### 좋아요 (`/api/v1/posts/{postId}/like`)
 
 | Method | Endpoint | 설명 | 인증 |
 |--------|----------|------|------|
-| GET | `/api/v1/posts/{postId}/comments` | 목록 조회 | X |
-| POST | `/api/v1/posts/{postId}/comments` | 작성 | O |
-| PUT | `/api/v1/posts/{postId}/comments/{id}` | 수정 | O (작성자) |
-| DELETE | `/api/v1/posts/{postId}/comments/{id}` | 삭제 | O (작성자) |
+| GET | `/api/v1/posts/{postId}/like` | 좋아요 정보 조회 | O |
+| POST | `/api/v1/posts/{postId}/like` | 좋아요 추가 | O |
+| DELETE | `/api/v1/posts/{postId}/like` | 좋아요 취소 | O |
+
+**참고**: 댓글은 PostResponse에 포함되어 반환됩니다 (별도 엔드포인트 없음)
 
 ## Entity 관계
 
@@ -118,22 +124,37 @@ User (1) ── (1) Blog (1) ── (*) Post ── (*) TagMap ── (1) Tag
   - `DuplicateException`: 중복 리소스 (409)
 - **GlobalExceptionHandler**: 전역 예외 처리로 일관된 에러 응답
 
+### QueryDSL 동적 쿼리 패턴
+- **Custom Repository**: `PostRepositoryCustom` 인터페이스 + `PostRepositoryImpl` 구현체
+- **Expression Helper**: `PostExpression`, `TagMapExpression`으로 재사용 가능한 조건 추상화
+- **복합 검색**: `PostGetRequest`로 keyword, tag, blogId, 정렬, 페이징을 한 번에 처리
+- **Enum 기반 설정**:
+  - `SearchField`: BLOG, NICKNAME, TITLE (검색 대상 필드)
+  - `SortField`: CREATED_AT, LIKE_COUNT (정렬 기준)
+  - `SortOrder`: ASC, DESC (정렬 방향)
+  - `TagMode`: OR, AND (태그 필터 모드)
+
 ### DTO 구조
 DTOs는 도메인별로 하위 패키지 구성:
 - `dto/auth/`: 인증 관련 (SignupRequest, LoginRequest, etc.)
-- `dto/posts/`: 게시글 관련
-- `dto/comments/`: 댓글 관련
+- `dto/posts/`: 게시글 관련 (PostGetRequest, PostCreateRequest, PostUpdateRequest, PostListResponse, PostResponse)
+- `dto/like/`: 좋아요 관련 (LikeResponse)
 - `dto/users/`: 사용자 관련
 - `dto/tags/`: 태그 관련
-- `dto/common/`: 공통 응답 (ErrorResponse 등)
+- `dto/common/`: 공통 응답 (ApiResponse, ErrorResponse, PageResponse 등)
 
 ## 구현 현황
 
 ### 완료
-- 회원가입/로그인/로그아웃, 게시글 CRUD, 댓글 CRUD, 사용자 CRUD, 해시태그
+- 회원가입/로그인/로그아웃
+- 게시글 CRUD (QueryDSL 동적 쿼리 포함)
+- 사용자 CRUD
+- 해시태그 (TagMap을 통한 다대다 관계)
+- 좋아요 CRUD (LikeController, LikeService)
 
-### 미구현 (Sprint 2)
-- 좋아요, 팔로우 (Entity만 존재)
+### 미구현
+- 팔로우 (Follow entity만 존재, 기능 미구현)
+- 댓글 별도 엔드포인트 (현재 PostResponse에만 포함)
 
 ## 구현 가이드
 
@@ -150,6 +171,19 @@ DTOs는 도메인별로 하위 패키지 구성:
 4. 권한 검증: Service 레이어에서 작성자 검증 후 `ForbiddenException` 발생
 5. SecurityConfig: `ProjectSecurityConfig`에 엔드포인트 인증 규칙 추가
 
+### QueryDSL Custom Repository 추가 시
+1. `repository/querydsl/custom/` 에 `XxxRepositoryCustom` 인터페이스 생성
+2. 같은 패키지에 `XxxRepositoryImpl` 구현체 생성 (이름 규칙 필수)
+3. 기본 JPA Repository가 Custom 인터페이스 상속: `interface XxxRepository extends JpaRepository, XxxRepositoryCustom`
+4. `repository/querydsl/expresion/` 에 재사용 가능한 BooleanExpression 메서드 작성
+5. 복잡한 동적 쿼리는 Expression Helper 활용하여 가독성 향상
+
+### 좋아요 구현 패턴 (참고)
+- **중복 체크**: `existsByUserIdAndPostId`로 추가 전 검증, 중복 시 `IllegalStateException`
+- **원자적 연산**: `@Modifying @Query`로 좋아요 수 증가/감소 (동시성 안전)
+- **반환값**: 최신 좋아요 수와 사용자의 좋아요 상태를 함께 반환
+- **프론트엔드 처리**: POST/DELETE 구분, 현재 상태 기반 호출 (LikeController 주석 참조)
+
 ### 테스트 작성
 - **Repository 테스트**: `@DataJpaTest` 사용
 - **Service 테스트**: Mockito로 Repository mocking
@@ -159,12 +193,15 @@ DTOs는 도메인별로 하위 패키지 구성:
 ## 알려진 이슈 및 TODO
 
 ### Critical
+- [ ] **LikeService**: `IllegalArgumentException`, `IllegalStateException` → 커스텀 예외로 변경
 - [ ] **AuthService/UserService**: `IllegalArgumentException` → 커스텀 예외로 변경
 - [ ] **UserController**: 권한 검증 추가 (본인만 수정/삭제)
 - [ ] **User.java**: `BaseEntity` 상속, `@Setter` 제거
-- [ ] **UserService vs UserServiceV2**: 중복 정리 필요
 
 ### Enhancement
+- [ ] **댓글 API**: 별도 엔드포인트 추가 (현재 PostResponse에만 포함)
+- [ ] **팔로우 기능**: FollowController, FollowService 구현
 - [ ] **CORS 설정**: 프론트엔드 연결 시 `ProjectSecurityConfig`에서 allowedOrigins 등 설정
 - [ ] **TagController**: 현재 비어있음, 태그 조회 API 추가 가능
-- [ ] **Hibernate DDL**: `create` → `update` 또는 `validate`로 변경 (프로덕션 준비 시)
+- [ ] **좋아요 토글 API**: 단일 엔드포인트로 POST/DELETE 통합 고려
+- [ ] **DDL 운영 모드**: 프로덕션에서 `validate`로 변경 (현재 `update`)
