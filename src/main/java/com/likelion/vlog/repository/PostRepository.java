@@ -1,9 +1,11 @@
 package com.likelion.vlog.repository;
 
 import com.likelion.vlog.entity.Post;
+import com.likelion.vlog.repository.querydsl.custom.PostRepositoryCustom;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
