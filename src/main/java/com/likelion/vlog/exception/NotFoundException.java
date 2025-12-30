@@ -24,4 +24,9 @@ public class NotFoundException extends RuntimeException {
     public static NotFoundException blog(Long userId) {
         return new NotFoundException("블로그를 찾을 수 없습니다. userId=" + userId);
     }
+
+    public static NotFoundException follow() {
+        return new NotFoundException("팔로우를 찾을 수 없습니다.");
+    }
+
 }

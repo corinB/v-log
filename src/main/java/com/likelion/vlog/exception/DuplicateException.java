@@ -12,4 +12,8 @@ public class DuplicateException extends RuntimeException {
     public static DuplicateException email(String email) {
         return new DuplicateException("이미 존재하는 이메일입니다. email=" + email);
     }
+
+    public static DuplicateException following() {
+        return new DuplicateException("이미 팔로우 중입니다.");
+    }
 }

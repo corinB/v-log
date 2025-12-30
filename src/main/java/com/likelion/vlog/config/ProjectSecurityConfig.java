@@ -47,6 +47,8 @@ public class ProjectSecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/posts").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/posts/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/posts/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/*/follows").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users/*/follows").authenticated()
 
                         .anyRequest().denyAll()
                 );
