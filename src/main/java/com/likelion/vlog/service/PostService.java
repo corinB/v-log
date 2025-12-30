@@ -1,11 +1,7 @@
 package com.likelion.vlog.service;
 
 import com.likelion.vlog.dto.comments.CommentWithRepliesResponse;
-import com.likelion.vlog.dto.posts.PostCreatePostRequest;
-import com.likelion.vlog.dto.posts.PostUpdatePutRequest;
-import com.likelion.vlog.dto.posts.PageResponse;
-import com.likelion.vlog.dto.posts.PostGetResponse;
-import com.likelion.vlog.dto.posts.PostListGetResponse;
+import com.likelion.vlog.dto.posts.*;
 import com.likelion.vlog.entity.*;
 import com.likelion.vlog.exception.ForbiddenException;
 import com.likelion.vlog.exception.NotFoundException;
@@ -61,6 +57,15 @@ public class PostService {
                 .map(PostListGetResponse::of)
                 .toList();
 
+        return PageResponse.of(postPage, content);
+    }
+
+    public PageResponse<PostListGetResponse> getPosts(PostGetRequest request) {
+        Page<Post> postPage = postRepository.search(request);
+        List<Post> posts = postPage.getContent();
+        List<PostListGetResponse> content = posts.stream()
+                .map(PostListGetResponse::of)
+                .toList();
         return PageResponse.of(postPage, content);
     }
 

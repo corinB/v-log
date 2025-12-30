@@ -36,8 +36,14 @@ public class LikeService {
         Like like = Like.from(user, post);
         likeRepository.save(like);
 
-        Long count = likeRepository.countByPostId(postId);
-        return new LikeResponse(count, true);
+        // DB 원자적 연산으로 좋아요 수 증가
+        postRepository.incrementLikeCount(postId);
+
+        // 갱신된 Post 조회하여 likeCount 반환
+        Post updatedPost = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+
+        return LikeResponse.from(updatedPost.getLikeCount(),true);
     }
 
     // 좋아요 삭제
@@ -50,18 +56,36 @@ public class LikeService {
 
         likeRepository.delete(like);
 
-        Long count = likeRepository.countByPostId(postId);
-        return new LikeResponse(count, false);
+        // DB 원자적 연산으로 좋아요 수 감소
+        postRepository.decrementLikeCount(postId);
+
+        // 갱신된 Post 조회하여 likeCount 반환
+        Post updatedPost = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+
+        return LikeResponse.from(updatedPost.getLikeCount(), false);
     }
 
-    // 좋아요 정보 조회
+    // 좋아요 정보 조회 (로그인 / 비로그인 모두 허용)
     @Transactional(readOnly = true)
     public LikeResponse getLikeInfo(String email, Long postId) {
+
+        // 1. 전체 좋아요 수 (항상 조회)
+        int count = postRepository.findById(postId)
+                .map(Post::getLikeCount)
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+
+        // 2. 비로그인 사용자
+        if (email == null) {
+            return LikeResponse.from(count, false);
+        }
+
+        // 3. 로그인 사용자
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        Long count = likeRepository.countByPostId(postId);
+
         boolean checkLike = likeRepository.existsByUserIdAndPostId(user.getId(), postId);
-        return new LikeResponse(count, checkLike);
+        return LikeResponse.from(count, checkLike);
     }
 }

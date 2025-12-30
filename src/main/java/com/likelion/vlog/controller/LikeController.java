@@ -16,13 +16,18 @@ public class LikeController {
 
     private final LikeService likeService;
 
-    // 좋아요 정보 조회
     @GetMapping
     public ResponseEntity<ApiResponse<LikeResponse>> getLikes(
             @PathVariable Long postId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        LikeResponse response = likeService.getLikeInfo(userDetails.getUsername(), postId);
-        return ResponseEntity.ok(ApiResponse.success("좋아요 조회 성공", response));
+
+        String email = (userDetails != null) ? userDetails.getUsername() : null;
+
+        LikeResponse response = likeService.getLikeInfo(email, postId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("좋아요 조회 성공", response)
+        );
     }
 
     /**

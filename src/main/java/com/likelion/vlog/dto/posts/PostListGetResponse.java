@@ -15,8 +15,12 @@ public class PostListGetResponse {
     private Long postId;
     private String title;
     private String content;
+    private Integer viewCount;
+    private Integer likeCount;
     private AuthorResponse author;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
 
     public static PostListGetResponse of(Post post) {
         return PostListGetResponse.builder()
@@ -25,6 +29,9 @@ public class PostListGetResponse {
                 .content(post.getContent())
                 .author(AuthorResponse.from(post.getBlog().getUser()))
                 .createdAt(post.getCreatedAt())
+                .updatedAt(post.getUpdatedAt())
+                .viewCount(post.getViewCount())
+                .likeCount(post.getLikeCount())
                 .build();
     }
 }

@@ -36,13 +36,17 @@ public class ProjectSecurityConfig {
                 .csrf(csrf -> csrf.disable());
 
         http.authorizeHttpRequests(auth -> auth
-                // -------------------------------------------------
-                // 1) 인증 X (Public)
-                // -------------------------------------------------
-                .requestMatchers(HttpMethod.POST,
-                        "/api/v1/auth/signup",
-                        "/api/v1/auth/login"
-                ).permitAll()
+                        // 인증 X
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/tags/users/**", //사용자 조회
+                                "/api/v1/tags/**", //태그 조회
+                                "/api/v1/posts/**" //게시글 조회
+                        ).permitAll()
+
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/tags/auth/signup", //회원가입
+                                "/api/v1/tags/auth/login" //로그인
+                        ).permitAll()
 
                 .requestMatchers(HttpMethod.GET,
                         "/api/v1/users/*",      // 사용자 프로필 조회
