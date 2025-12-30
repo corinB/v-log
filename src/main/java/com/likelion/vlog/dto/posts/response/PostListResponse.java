@@ -17,8 +17,12 @@ public class PostListResponse {
     private Long postId;
     private String title;
     private String content;
+    private Integer viewCount;
+    private Integer likeCount;
     private AuthorResponse author;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
 
     public static PostListResponse of(Post post) {
 
@@ -28,6 +32,9 @@ public class PostListResponse {
                 .content(post.getContent())
                 .author(AuthorResponse.from(post.getBlog().getUser()))
                 .createdAt(post.getCreatedAt())
+                .updatedAt(post.getUpdatedAt())
+                .viewCount(post.getViewCount())
+                .likeCount(post.getLikeCount())
                 .build();
     }
 }

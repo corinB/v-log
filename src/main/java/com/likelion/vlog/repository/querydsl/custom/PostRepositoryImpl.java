@@ -11,7 +11,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
-
 @RequiredArgsConstructor
 public class PostRepositoryImpl implements PostRepositoryCustom {
 
@@ -24,28 +23,31 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
         int page = request.getPage();
         int size = request.getSize();
 
+        //검색
         var query = jpaQueryFactory
                 .selectFrom(post)
+                .distinct()
                 .where(post.search(request));
 
+        //정렬
         OrderSpecifier<?> order = post.sort(request);
         query.orderBy(order, post.id.desc());
 
+        //결과
         List<Post> content = query
                 .offset((long) page * size)
                 .limit(size)
                 .fetch();
 
-        // total count (정렬/페이징 없이)
+        // 페이징을 위해 총 조회건수
         Long total = jpaQueryFactory
-                .select(post.count())
+                .select(post.id.countDistinct())
                 .from(post)
                 .where(post.search(request))
                 .fetchOne();
 
-        long totalElements = total == null ? 0L : total;
+        total = total == null ? 0L : total;
 
-        return new PageImpl<>(content, PageRequest.of(page, size), totalElements);
+        return new PageImpl<>(content, PageRequest.of(page, size), total);
     }
-
 }

@@ -2,7 +2,6 @@ package com.likelion.vlog.dto.posts;
 
 import com.likelion.vlog.enums.SearchFiled;
 import com.likelion.vlog.enums.SortField;
-import com.likelion.vlog.enums.SortOrder;
 import com.likelion.vlog.enums.TagMode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,7 +26,7 @@ public class PostGetRequest {
     private SearchFiled search = SearchFiled.TITLE;
     private TagMode tagMode = TagMode.OR;
     private SortField sort = SortField.CREATED_AT;
-    private SortOrder order = SortOrder.DESC;
+    private boolean asc;
 
     public void normalize() {
         if (tag == null) tag = List.of();
