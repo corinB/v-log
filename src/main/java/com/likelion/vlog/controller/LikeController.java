@@ -3,12 +3,15 @@ package com.likelion.vlog.controller;
 import com.likelion.vlog.dto.common.ApiResponse;
 import com.likelion.vlog.dto.like.LikeResponse;
 import com.likelion.vlog.service.LikeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "좋아요", description = "게시글 좋아요 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/posts/{postId}/like")
@@ -16,6 +19,7 @@ public class LikeController {
 
     private final LikeService likeService;
 
+    @Operation(summary = "좋아요 정보 조회", description = "게시글의 좋아요 수와 현재 사용자의 좋아요 여부 조회")
     @GetMapping
     public ResponseEntity<ApiResponse<LikeResponse>> getLikes(
             @PathVariable Long postId,
@@ -52,7 +56,7 @@ public class LikeController {
      * }
      */
 
-    // 좋아요 추가
+    @Operation(summary = "좋아요 추가", description = "게시글에 좋아요 추가 (인증 필요)")
     @PostMapping
     public ResponseEntity<ApiResponse<LikeResponse>> addLike(
             @PathVariable Long postId,
@@ -61,7 +65,7 @@ public class LikeController {
         return ResponseEntity.ok(ApiResponse.success("좋아요 추가 성공", response));
     }
 
-    // 좋아요 삭제
+    @Operation(summary = "좋아요 취소", description = "게시글 좋아요 취소 (인증 필요)")
     @DeleteMapping
     public ResponseEntity<ApiResponse<LikeResponse>> removeLike(
             @PathVariable Long postId,

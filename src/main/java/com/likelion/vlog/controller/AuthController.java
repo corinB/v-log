@@ -6,6 +6,9 @@ import com.likelion.vlog.dto.auth.SignupRequest;
 import com.likelion.vlog.dto.common.ApiResponse;
 import com.likelion.vlog.dto.users.UserGetResponse;
 import com.likelion.vlog.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -20,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "인증", description = "회원가입, 로그인, 로그아웃 API")
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -28,12 +32,14 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository securityContextRepository;
 
+    @Operation(summary = "회원가입", description = "이메일, 비밀번호, 닉네임으로 회원가입")
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<UserGetResponse>> signup(@Valid @RequestBody SignupRequest dto) {
         UserGetResponse userGetresponse = authService.signup(dto);
         return ResponseEntity.ok(ApiResponse.success("회원가입 성공", userGetresponse));
     }
 
+    @Operation(summary = "로그인", description = "이메일, 비밀번호로 로그인 (세션 기반)")
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<UserGetResponse>> login(@RequestBody LoginRequest req,
                                                               HttpServletRequest request,
@@ -57,6 +63,7 @@ public class AuthController {
                 authService.getUserInfo(authentication.getName())));
     }
 
+    @Operation(summary = "로그아웃", description = "세션 무효화 및 로그아웃")
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<String>> logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);

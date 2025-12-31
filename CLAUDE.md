@@ -37,9 +37,9 @@ Spring Boot 3.5.9 / Java 21 / JPA + QueryDSL + MySQL / Spring Security (세션 �
 
 ```
 com.likelion.vlog
-├── config/          # ProjectSecurityConfig, appConfig
-├── controller/      # PostController, LikeController, AuthController, UserController, TagController
-├── service/         # PostService, LikeService, AuthService, UserService, TagService
+├── config/          # ProjectSecurityConfig, SwaggerConfig, JpaConfig
+├── controller/      # PostController, CommentController, LikeController, FollowController, AuthController, UserController, TagController
+├── service/         # PostService, CommentService, LikeService, FollowService, AuthService, UserService, TagService
 ├── repository/
 │   ├── querydsl/    # QueryDSL custom repositories (PostRepositoryCustom, PostRepositoryImpl)
 │   │   ├── custom/  # Custom interface & implementations
@@ -83,11 +83,36 @@ com.likelion.vlog
 
 | Method | Endpoint | 설명 | 인증 |
 |--------|----------|------|------|
-| GET | `/api/v1/posts/{postId}/like` | 좋아요 정보 조회 | O |
+| GET | `/api/v1/posts/{postId}/like` | 좋아요 정보 조회 | X (선택적) |
 | POST | `/api/v1/posts/{postId}/like` | 좋아요 추가 | O |
 | DELETE | `/api/v1/posts/{postId}/like` | 좋아요 취소 | O |
 
-**참고**: 댓글은 PostResponse에 포함되어 반환됩니다 (별도 엔드포인트 없음)
+### 댓글 (`/api/v1/posts/{postId}/comments`)
+
+| Method | Endpoint | 설명 | 인증 |
+|--------|----------|------|------|
+| GET | `/api/v1/posts/{postId}/comments` | 댓글 목록 조회 (답글 포함) | X |
+| POST | `/api/v1/posts/{postId}/comments` | 댓글 작성 | O |
+| PUT | `/api/v1/posts/{postId}/comments/{commentId}` | 댓글 수정 | O (작성자) |
+| DELETE | `/api/v1/posts/{postId}/comments/{commentId}` | 댓글 삭제 | O (작성자) |
+| POST | `/api/v1/posts/{postId}/comments/{commentId}/replies` | 답글 작성 | O |
+| PUT | `/api/v1/posts/{postId}/comments/{commentId}/replies/{replyId}` | 답글 수정 | O (작성자) |
+| DELETE | `/api/v1/posts/{postId}/comments/{commentId}/replies/{replyId}` | 답글 삭제 | O (작성자) |
+
+### 팔로우 (`/api/v1/users/{userId}`)
+
+| Method | Endpoint | 설명 | 인증 |
+|--------|----------|------|------|
+| POST | `/api/v1/users/{userId}/follows` | 팔로우 | O |
+| DELETE | `/api/v1/users/{userId}/follows` | 언팔로우 | O |
+| GET | `/api/v1/users/{userId}/followers` | 팔로워 목록 조회 (페이징) | X |
+| GET | `/api/v1/users/{userId}/followings` | 팔로잉 목록 조회 (페이징) | X |
+
+### 태그 (`/api/v1/tags`)
+
+| Method | Endpoint | 설명 | 인증 |
+|--------|----------|------|------|
+| GET | `/api/v1/tags/{title}` | 태그 조회 | X |
 
 ## Entity 관계
 
@@ -139,25 +164,29 @@ User (1) ── (1) Blog (1) ── (*) Post ── (*) TagMap ── (1) Tag
 
 ### DTO 구조
 DTOs는 도메인별로 하위 패키지 구성:
-- `dto/auth/`: 인증 관련 (SignupRequest, LoginRequest, etc.)
-- `dto/posts/`: 게시글 관련 (PostGetRequest, PostCreateRequest, PostUpdateRequest, PostListResponse, PostResponse)
+- `dto/auth/`: 인증 관련 (SignupRequest, LoginRequest)
+- `dto/posts/`: 게시글 관련 (PostGetRequest, PostCreatePostRequest, PostUpdatePutRequest, PostListGetResponse, PostGetResponse, PageResponse)
+- `dto/comments/`: 댓글 관련 (CommentCreatePostRequest, CommentUpdatePutRequest, CommentPostResponse, CommentPutResponse, CommentWithRepliesGetResponse, ReplyCreatePostRequest, ReplyUpdatePutRequest, ReplyPostResponse, ReplyPutResponse, ReplyGetResponse)
 - `dto/like/`: 좋아요 관련 (LikeResponse)
-- `dto/users/`: 사용자 관련
-- `dto/tags/`: 태그 관련
-- `dto/common/`: 공통 응답 (ApiResponse, ErrorResponse, PageResponse 등)
+- `dto/follows/`: 팔로우 관련 (FollowPostResponse, FollowDeleteResponse, FollowerGetResponse, FollowingGetResponse, PageResponse)
+- `dto/users/`: 사용자 관련 (UserGetResponse, UserUpdateRequest, UserDeleteRequest)
+- `dto/tags/`: 태그 관련 (TagGetResponse)
+- `dto/common/`: 공통 응답 (ApiResponse)
+
+**주의**: PageResponse가 `dto/posts/`와 `dto/follows/`에 중복 정의되어 있음 → `dto/common/`으로 통합 필요
 
 ## 구현 현황
 
 ### 완료
-- 회원가입/로그인/로그아웃
+- 회원가입/로그인/로그아웃 (AuthController, AuthService)
 - 게시글 CRUD (QueryDSL 동적 쿼리 포함)
-- 사용자 CRUD
+- 사용자 CRUD (UserController, UserService)
 - 해시태그 (TagMap을 통한 다대다 관계)
 - 좋아요 CRUD (LikeController, LikeService)
-
-### 미구현
-- 팔로우 (Follow entity만 존재, 기능 미구현)
-- 댓글 별도 엔드포인트 (현재 PostResponse에만 포함)
+- 댓글/답글 CRUD (CommentController, CommentService)
+- 팔로우/언팔로우 (FollowController, FollowService)
+- 태그 조회 (TagController, TagService)
+- Swagger UI (springdoc-openapi)
 
 ## 구현 가이드
 
@@ -214,17 +243,33 @@ DTOs는 도메인별로 하위 패키지 구성:
 
 ## 알려진 이슈 및 TODO
 
-### Critical
+> 상세 내용은 `docs/CODE_REVIEW.md` 참조
+
+### Critical (즉시 수정 필요)
 - [x] **LikeService**: `IllegalArgumentException`, `IllegalStateException` → 커스텀 예외로 변경 완료
 - [x] **AuthService/UserService**: `IllegalArgumentException` → 커스텀 예외로 변경 완료
 - [x] **FollowService**: `IllegalArgumentException` → 커스텀 예외로 변경 완료
-- [ ] **UserController**: 권한 검증 추가 (본인만 수정/삭제)
-- [ ] **User.java**: `BaseEntity` 상속, `@Setter` 제거
+- [ ] **UserController 보안**: `@AuthenticationPrincipal` 누락 - 아무나 다른 사용자 수정/삭제 가능
+- [ ] **CORS 미설정**: `ProjectSecurityConfig`에 CORS 설정 추가 필요 (허용 도메인: `localhost:3000`)
+- [ ] **Blog.java**: `@Setter` 사용 중 - 제거 필요 (CLAUDE.md 원칙 위반)
+- [ ] **User.java**: Hibernate 시간 어노테이션(`@CurrentTimestamp`, `@UpdateTimestamp`)과 JPA Auditing 충돌 - Hibernate 어노테이션 제거 필요
 
-### Enhancement
-- [ ] **댓글 API**: 별도 엔드포인트 추가 (현재 PostResponse에만 포함)
-- [ ] **팔로우 기능**: FollowController, FollowService 구현
-- [ ] **CORS 설정**: 프론트엔드 연결 시 `ProjectSecurityConfig`에서 allowedOrigins 등 설정
-- [ ] **TagController**: 현재 비어있음, 태그 조회 API 추가 가능
-- [ ] **좋아요 토글 API**: 단일 엔드포인트로 POST/DELETE 통합 고려
+### High Priority
+- [ ] **LikeService @Transactional**: 클래스 레벨 `@Transactional` → `@Transactional(readOnly = true)`로 변경
+- [ ] **LikeController 인증**: GET 메서드에 `@AuthenticationPrincipal(required = false)` 명시 필요
+- [ ] **SecurityConfig 중복**: 동일 엔드포인트 중복 정의 (라인 40-44, 51-59)
+- [ ] **PathVariable 네이밍**: `user_id` (snake_case) vs `postId` (camelCase) 혼용 → camelCase 통일
+- [ ] **FollowService N+1**: getFollowers에서 각 팔로워마다 추가 쿼리 발생 → QueryDSL로 개선
+
+### Medium Priority
+- [ ] **CommentService 예외**: NotFoundException, ForbiddenException 정적 팩토리 미사용
+- [ ] **PageResponse 중복**: `dto/posts/`와 `dto/follows/`에 중복 → `dto/common/`으로 통합
+- [ ] **PostController 응답 불일치**: getPosts만 ApiResponse 래핑 없이 반환 → 통일 필요
+- [ ] **User.upDateInfo() 오타**: `upDateInfo` → `updateInfo`로 수정
+- [ ] **TagService null 처리**: `orElse(null)` → `NotFoundException.tag(tagName)` 발생
+
+### Low Priority
+- [ ] **코드 중복 제거**: User/Post 조회 로직, FollowController PageResponse 구성 중복
+- [ ] **Swagger @Parameter 누락**: 컨트롤러 파라미터에 설명 추가 필요
+- [ ] **삭제 응답 통일**: PostController(204) vs CommentController(200) → 204로 통일
 - [ ] **DDL 운영 모드**: 프로덕션에서 `validate`로 변경 (현재 `update`)

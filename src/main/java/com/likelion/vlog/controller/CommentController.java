@@ -3,6 +3,8 @@ package com.likelion.vlog.controller;
 import com.likelion.vlog.dto.comments.*;
 import com.likelion.vlog.dto.common.ApiResponse;
 import com.likelion.vlog.service.CommentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,10 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * 댓글/대댓글 API 컨트롤러
- * - Base URL: /api/v1/posts/{postId}/comments
- */
+@Tag(name = "댓글", description = "댓글 및 답글 CRUD API")
 @RestController
 @RequestMapping("/api/v1/posts/{postId}/comments")
 @RequiredArgsConstructor
@@ -24,11 +23,7 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    /**
-     * 댓글 목록 조회 (GET /api/v1/posts/{postId}/comments)
-     * - 대댓글 포함
-     * - 인증 불필요
-     */
+    @Operation(summary = "댓글 목록 조회", description = "게시글의 댓글 목록 조회 (답글 포함)")
     @GetMapping
     public ResponseEntity<ApiResponse<List<CommentWithRepliesGetResponse>>> getComments(
             @PathVariable Long postId) {
@@ -37,11 +32,7 @@ public class CommentController {
         return ResponseEntity.ok(ApiResponse.success("댓글 목록 조회 성공", response));
     }
 
-    /**
-     * 댓글 작성 (POST /api/v1/posts/{postId}/comments)
-     * - 인증 필요
-     * - 성공 시 201 Created
-     */
+    @Operation(summary = "댓글 작성", description = "게시글에 댓글 작성 (인증 필요)")
     @PostMapping
     public ResponseEntity<ApiResponse<CommentPostResponse>> createComment(
             @PathVariable Long postId,
@@ -53,11 +44,7 @@ public class CommentController {
                 .body(ApiResponse.success("댓글 작성 성공", response));
     }
 
-    /**
-     * 댓글 수정 (PUT /api/v1/posts/{postId}/comments/{commentId})
-     * - 인증 필요
-     * - 작성자만 수정 가능
-     */
+    @Operation(summary = "댓글 수정", description = "댓글 수정 (작성자만 가능)")
     @PutMapping("/{commentId}")
     public ResponseEntity<ApiResponse<CommentPutResponse>> updateComment(
             @PathVariable Long postId,
@@ -69,11 +56,7 @@ public class CommentController {
         return ResponseEntity.ok(ApiResponse.success("댓글 수정 성공", response));
     }
 
-    /**
-     * 댓글 삭제 (DELETE /api/v1/posts/{postId}/comments/{commentId})
-     * - 인증 필요
-     * - 작성자만 삭제 가능
-     */
+    @Operation(summary = "댓글 삭제", description = "댓글 삭제 (작성자만 가능)")
     @DeleteMapping("/{commentId}")
     public ResponseEntity<ApiResponse<?>> deleteComment(
             @PathVariable Long postId,
@@ -84,11 +67,7 @@ public class CommentController {
         return ResponseEntity.ok(ApiResponse.success("댓글 삭제 성공"));
     }
 
-    /**
-     * 답글 작성 (POST /api/v1/posts/{postId}/comments/{commentId}/replies)
-     * - 인증 필요
-     * - 성공 시 201 Created
-     */
+    @Operation(summary = "답글 작성", description = "댓글에 답글 작성 (인증 필요)")
     @PostMapping("/{commentId}/replies")
     public ResponseEntity<ApiResponse<ReplyPostResponse>> createReply(
             @PathVariable Long postId,
@@ -101,11 +80,7 @@ public class CommentController {
                 .body(ApiResponse.success("답글 작성 성공", response));
     }
 
-    /**
-     * 답글 수정 (PUT /api/v1/posts/{postId}/comments/{commentId}/replies/{replyId})
-     * - 인증 필요
-     * - 작성자만 수정 가능
-     */
+    @Operation(summary = "답글 수정", description = "답글 수정 (작성자만 가능)")
     @PutMapping("/{commentId}/replies/{replyId}")
     public ResponseEntity<ApiResponse<ReplyPutResponse>> updateReply(
             @PathVariable Long postId,
@@ -118,11 +93,7 @@ public class CommentController {
         return ResponseEntity.ok(ApiResponse.success("답글 수정 성공", response));
     }
 
-    /**
-     * 답글 삭제 (DELETE /api/v1/posts/{postId}/comments/{commentId}/replies/{replyId})
-     * - 인증 필요
-     * - 작성자만 삭제 가능
-     */
+    @Operation(summary = "답글 삭제", description = "답글 삭제 (작성자만 가능)")
     @DeleteMapping("/{commentId}/replies/{replyId}")
     public ResponseEntity<ApiResponse<?>> deleteReply(
             @PathVariable Long postId,

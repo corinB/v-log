@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 @Table(name = "users")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User extends  BaseEntity {
+public class User extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
@@ -23,8 +23,6 @@ public class User extends  BaseEntity {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Blog blog;
 
-//    @OneToMany(mappedBy = "user")
-//    private List<Comment> comments =  new ArrayList<>();
 
     @Column(unique = true, nullable = false)
     private String email;

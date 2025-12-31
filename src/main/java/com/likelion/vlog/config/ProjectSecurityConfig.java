@@ -58,6 +58,13 @@ public class ProjectSecurityConfig {
                         "/api/v1/users/*/followings" // 팔로잉 조회
                 ).permitAll()
 
+                // Swagger UI
+                .requestMatchers(
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/v3/api-docs/**"
+                ).permitAll()
+
                 // -------------------------------------------------
                 // 2) 인증 O (Authenticated)
                 // -------------------------------------------------
