@@ -1,13 +1,33 @@
 # CLAUDE.md
 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 ## 빌드 및 실행
 
 ```bash
-./gradlew build          # 빌드
-./gradlew bootRun        # 실행
-./gradlew test           # 테스트
-docker-compose up -d     # MySQL (port 13306)
+# 빌드 및 실행
+./gradlew build                    # 전체 빌드
+./gradlew bootRun                  # 애플리케이션 실행
+./gradlew test                     # 전체 테스트 실행
+./gradlew test --tests ClassName  # 특정 테스트 클래스 실행
+./gradlew clean build              # 클린 빌드
+
+# 데이터베이스
+docker-compose up -d               # MySQL 시작 (port 13306)
+docker-compose down                # MySQL 중지
 ```
+
+## 환경 설정
+
+**application.yaml** 기본 설정:
+- DB URL: `jdbc:mysql://localhost:3306/vlog`
+- DB User: `root` / Password: `1111`
+- Hibernate DDL: `update` (스키마 자동 업데이트, 데이터 유지)
+- SQL 로깅 활성화 (format_sql, bind parameter trace)
+
+**데이터베이스 설정**:
+- 개발 환경: **로컬 MySQL 사용** (port 3306, database: vlog)
+- docker-compose.yml은 참고용 (사용 시 application.yaml 포트를 13306으로 변경 필요)
 
 ## 기술 스택
 
@@ -17,144 +37,194 @@ Spring Boot 3.5.9 / Java 21 / JPA + QueryDSL + MySQL / Spring Security (세션 �
 
 ```
 com.likelion.vlog
-├── config/              # ProjectSecurityConfig
-├── controller/          # Auth, Post, Comment, Like, Follow, User, Tag
-├── service/             # 비즈니스 로직
-├── repository/          # JPA + QueryDSL Custom Repository
-├── entity/              # User, Blog, Post, Comment, Tag, TagMap, Like, Follow
-├── dto/                 # auth/, posts/, comments/, like/, follows/, users/, tags/, common/
-└── exception/           # NotFoundException, ForbiddenException, DuplicateException
+├── config/          # ProjectSecurityConfig, appConfig
+├── controller/      # PostController, LikeController, AuthController, UserController, TagController
+├── service/         # PostService, LikeService, AuthService, UserService, TagService
+├── repository/
+│   ├── querydsl/    # QueryDSL custom repositories (PostRepositoryCustom, PostRepositoryImpl)
+│   │   ├── custom/  # Custom interface & implementations
+│   │   └── expresion/ # QueryDSL expression helpers (PostExpression, TagMapExpression)
+│   └── *.java       # Standard JPA repositories
+├── dto/             # Request/Response DTOs (도메인별 패키지 구조)
+├── enums/           # SearchField, SortField, SortOrder, TagMode
+├── exception/       # NotFoundException, ForbiddenException, DuplicateException, GlobalExceptionHandler
+└── entity/          # User, Blog, Post, Comment, Tag, TagMap, Like, Follow
 ```
 
 ## API 엔드포인트
 
-### 인증 (`/api/v1/auth`)
-| Method | Endpoint | 설명 | 인증 |
-|--------|----------|------|------|
-| POST | `/signup` | 회원가입 | X |
-| POST | `/login` | 로그인 | X |
-| POST | `/logout` | 로그아웃 | O |
-
 ### 게시글 (`/api/v1/posts`)
-| Method | Endpoint | 설명 | 인증 |
-|--------|----------|------|------|
-| GET | `/` | 목록 조회 (QueryDSL 동적 쿼리) | X |
-| GET | `/{postId}` | 상세 조회 (댓글 포함) | X |
-| POST | `/` | 작성 | O |
-| PUT | `/{postId}` | 수정 | O (작성자) |
-| DELETE | `/{postId}` | 삭제 | O (작성자) |
 
-### 댓글 (`/api/v1/posts/{postId}/comments`)
 | Method | Endpoint | 설명 | 인증 |
 |--------|----------|------|------|
-| GET | `/` | 목록 조회 (대댓글 포함) | X |
-| POST | `/` | 댓글 작성 | O |
-| PUT | `/{commentId}` | 댓글 수정 | O (작성자) |
-| DELETE | `/{commentId}` | 댓글 삭제 | O (작성자) |
-| POST | `/{commentId}/replies` | 답글 작성 | O |
-| PUT | `/{commentId}/replies/{replyId}` | 답글 수정 | O (작성자) |
-| DELETE | `/{commentId}/replies/{replyId}` | 답글 삭제 | O (작성자) |
+| GET | `/api/v1/posts` | 목록 조회 | X |
+| GET | `/api/v1/posts/{id}` | 상세 조회 | X |
+| POST | `/api/v1/posts` | 작성 | O |
+| PUT | `/api/v1/posts/{id}` | 수정 | O (작성자) |
+| DELETE | `/api/v1/posts/{id}` | 삭제 | O (작성자) |
+
+### 인증 (`/auth`)
+
+| Method | Endpoint | 설명 | 인증 |
+|--------|----------|------|------|
+| POST | `/auth/signup` | 회원가입 | X |
+| POST | `/auth/login` | 로그인 | X |
+| POST | `/auth/logout` | 로그아웃 | O |
+
+### 사용자 (`/users`)
+
+| Method | Endpoint | 설명 | 인증 |
+|--------|----------|------|------|
+| GET | `/users/{id}` | 조회 | X |
+| PUT | `/users/{id}` | 수정 | O |
+| DELETE | `/users/{id}` | 탈퇴 | O |
 
 ### 좋아요 (`/api/v1/posts/{postId}/like`)
-| Method | Endpoint | 설명 | 인증 |
-|--------|----------|------|------|
-| GET | `/` | 좋아요 정보 조회 | O |
-| POST | `/` | 좋아요 추가 | O |
-| DELETE | `/` | 좋아요 취소 | O |
 
-### 팔로우 (`/api/v1/users/{userId}/follows`)
 | Method | Endpoint | 설명 | 인증 |
 |--------|----------|------|------|
-| POST | `/` | 팔로우 | O |
-| DELETE | `/` | 언팔로우 | O |
+| GET | `/api/v1/posts/{postId}/like` | 좋아요 정보 조회 | O |
+| POST | `/api/v1/posts/{postId}/like` | 좋아요 추가 | O |
+| DELETE | `/api/v1/posts/{postId}/like` | 좋아요 취소 | O |
 
-### 사용자 (`/api/v1/users`)
-| Method | Endpoint | 설명 | 인증 |
-|--------|----------|------|------|
-| GET | `/{userId}` | 조회 | X |
-| PUT | `/{userId}` | 수정 | O |
-| DELETE | `/{userId}` | 탈퇴 | O |
-
-### 태그 (`/api/v1/tags`)
-| Method | Endpoint | 설명 | 인증 |
-|--------|----------|------|------|
-| GET | `/{title}` | 태그명으로 조회 | X |
+**참고**: 댓글은 PostResponse에 포함되어 반환됩니다 (별도 엔드포인트 없음)
 
 ## Entity 관계
 
 ```
-User (1) ── Blog (1) ── Post (*) ── TagMap (*) ── Tag (*)
-  │                       │
-  │                       ├── Comment (*) [self-reference]
-  │                       └── Like (*) ── User (*)
-  │
-  └── Follow (*) [self-reference]
+User (1) ── (1) Blog (1) ── (*) Post ── (*) TagMap ── (1) Tag
+                              ├── (*) Comment (self-ref)
+                              └── (*) Like ── (*) User
 ```
 
-## 코딩 컨벤션
+## 아키텍처 핵심 패턴
 
-### Entity
-- `BaseEntity` 상속 (createdAt, updatedAt)
-- `@Setter` 금지, 정적 팩토리 메서드 사용
+### 인증 시스템 (Session-based)
+- **SecurityFilterChain**: `ProjectSecurityConfig`에서 세션 기반 인증 설정
+- **인증 방식**: `DaoAuthenticationProvider` + `UserDetailsService` (AuthService 구현)
+- **세션 저장소**: `HttpSessionSecurityContextRepository`
+- **비밀번호 인코딩**: `DelegatingPasswordEncoder` (bcrypt 기본)
+- **인증 실패 처리**: `AuthEntryPoint` (커스텀 EntryPoint)
 
-```java
-Post post = Post.of(title, content, blog);
-Comment comment = Comment.of(user, post, content);
-Comment reply = Comment.ofReply(user, post, parent, content);
-```
+**중요**:
+- `userDetails.getUsername()`은 **email**을 반환합니다 (User entity의 email이 인증 식별자)
+- 컨트롤러에서 인증된 사용자는 `@AuthenticationPrincipal UserDetails`로 주입받습니다
 
-### Service
-- 클래스: `@Transactional(readOnly = true)`
-- 쓰기 메서드만: `@Transactional`
-- 커스텀 예외: `NotFoundException`, `ForbiddenException`, `DuplicateException`
+### Entity 설계 원칙
+- **BaseEntity 상속**: 모든 엔티티는 `createdAt`, `updatedAt` 자동 관리를 위해 상속 필요
+- **@Setter 금지**: 불변성 보장, 명시적 메서드로만 상태 변경
+- **정적 팩토리 메서드**: Entity 생성은 정적 팩토리 메서드 사용 (`of()`, `create()` 등)
+- **JPA Auditing**: `@CreatedDate`, `@LastModifiedDate`로 시간 자동 기록
 
-### Controller
-- 인증 사용자: `@AuthenticationPrincipal UserDetails`
-- `userDetails.getUsername()` = email
+### Service 레이어
+- **트랜잭션 전략**: 클래스 레벨에 `@Transactional(readOnly=true)`, 쓰기 메서드만 `@Transactional` 오버라이드
+- **예외 처리**: 커스텀 예외만 사용
+  - `NotFoundException`: 리소스 없음 (404) - 정적 팩토리: `post()`, `user()`, `blog()`, `follow()`, `like()`
+  - `ForbiddenException`: 권한 없음 (403) - 정적 팩토리: `postUpdate()`, `postDelete()`, `userUpdate()`, `userDelete()`
+  - `DuplicateException`: 중복 리소스 (409) - 정적 팩토리: `email()`, `nickname()`, `following()`, `like()`
+  - `InvalidCredentialsException`: 인증 정보 불일치 (401) - 정적 팩토리: `login()`, `password()`
+  - `UnauthorizedException`: 로그인 필요 (401) - 정적 팩토리: `loginRequired()`
+  - `BadRequestException`: 잘못된 요청 (400) - 정적 팩토리: `requiredField()`, `invalidFormat()`, `selfFollow()`
+- **GlobalExceptionHandler**: 전역 예외 처리로 일관된 에러 응답
 
-### API 응답
-```java
-return ResponseEntity.ok(ApiResponse.success("메시지", data));           // 성공
-return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("생성", data)); // 201
-return ResponseEntity.noContent().build();                              // 204
-```
+### QueryDSL 동적 쿼리 패턴
+- **Custom Repository**: `PostRepositoryCustom` 인터페이스 + `PostRepositoryImpl` 구현체
+- **Expression Helper**: `PostExpression`, `TagMapExpression`으로 재사용 가능한 조건 추상화
+- **복합 검색**: `PostGetRequest`로 keyword, tag, blogId, 정렬, 페이징을 한 번에 처리
+- **Enum 기반 설정**:
+  - `SearchField`: BLOG, NICKNAME, TITLE (검색 대상 필드)
+  - `SortField`: CREATED_AT, LIKE_COUNT (정렬 기준)
+  - `SortOrder`: ASC, DESC (정렬 방향)
+  - `TagMode`: OR, AND (태그 필터 모드)
 
-### DTO 네이밍
-- Request: `{Action}{HttpMethod}Request` (예: `CommentCreatePostRequest`)
-- Response: `{Resource}{HttpMethod}Response` (예: `PostGetResponse`)
-- 정적 메서드: `from(Entity)` 타입 변환, `of(값들)` 값 조립
-
-## QueryDSL
-
-**Custom Repository 구조**:
-- `PostRepositoryCustom` 인터페이스
-- `PostRepositoryImpl` 구현체
-- `PostExpression` 조건 헬퍼
-
-**동적 쿼리 지원**:
-- keyword 검색, tag 필터, blogId 필터, 정렬, 페이징
+### DTO 구조
+DTOs는 도메인별로 하위 패키지 구성:
+- `dto/auth/`: 인증 관련 (SignupRequest, LoginRequest, etc.)
+- `dto/posts/`: 게시글 관련 (PostGetRequest, PostCreateRequest, PostUpdateRequest, PostListResponse, PostResponse)
+- `dto/like/`: 좋아요 관련 (LikeResponse)
+- `dto/users/`: 사용자 관련
+- `dto/tags/`: 태그 관련
+- `dto/common/`: 공통 응답 (ApiResponse, ErrorResponse, PageResponse 등)
 
 ## 구현 현황
 
 ### 완료
 - 회원가입/로그인/로그아웃
-- 게시글 CRUD (QueryDSL 동적 쿼리)
-- 댓글/대댓글 CRUD
-- 좋아요 추가/삭제/조회
-- 팔로우/언팔로우
+- 게시글 CRUD (QueryDSL 동적 쿼리 포함)
 - 사용자 CRUD
-- 해시태그
+- 해시태그 (TagMap을 통한 다대다 관계)
+- 좋아요 CRUD (LikeController, LikeService)
 
 ### 미구현
-- 팔로워/팔로잉 목록 조회 API
+- 팔로우 (Follow entity만 존재, 기능 미구현)
+- 댓글 별도 엔드포인트 (현재 PostResponse에만 포함)
 
-## TODO
+## 구현 가이드
+
+### 새 엔티티 추가 시
+1. `BaseEntity` 상속
+2. `@Getter` 사용, `@Setter` 금지
+3. 정적 팩토리 메서드로 생성 (`of()`, `create()` 등)
+4. 연관 관계 설정 시 양방향이면 편의 메서드 추가
+
+### 새 API 엔드포인트 추가 시
+1. Controller: `@AuthenticationPrincipal UserDetails`로 인증 사용자 받기
+2. Service: `@Transactional(readOnly=true)` 클래스 레벨, 쓰기 메서드에만 `@Transactional`
+3. 예외 처리: 커스텀 예외의 정적 팩토리 메서드 사용
+   - 리소스 없음: `NotFoundException.post(id)`, `NotFoundException.user(email)` 등
+   - 중복 데이터: `DuplicateException.email(email)`, `DuplicateException.like()` 등
+   - 권한 없음: `ForbiddenException.postUpdate()`, `ForbiddenException.userDelete()` 등
+   - 인증 실패: `InvalidCredentialsException.password()`, `UnauthorizedException.loginRequired()` 등
+   - 잘못된 요청: `BadRequestException.requiredField(name)`, `BadRequestException.selfFollow()` 등
+4. 권한 검증: Service 레이어에서 작성자 검증 후 `ForbiddenException` 발생
+5. SecurityConfig: `ProjectSecurityConfig`에 엔드포인트 인증 규칙 추가
+
+### QueryDSL Custom Repository 추가 시
+1. `repository/querydsl/custom/` 에 `XxxRepositoryCustom` 인터페이스 생성
+2. 같은 패키지에 `XxxRepositoryImpl` 구현체 생성 (이름 규칙 필수)
+3. 기본 JPA Repository가 Custom 인터페이스 상속: `interface XxxRepository extends JpaRepository, XxxRepositoryCustom`
+4. `repository/querydsl/expresion/` 에 재사용 가능한 BooleanExpression 메서드 작성
+5. 복잡한 동적 쿼리는 Expression Helper 활용하여 가독성 향상
+
+### 좋아요 구현 패턴 (참고)
+- **중복 체크**: `existsByUserIdAndPostId`로 추가 전 검증, 중복 시 `IllegalStateException`
+- **원자적 연산**: `@Modifying @Query`로 좋아요 수 증가/감소 (동시성 안전)
+- **반환값**: 최신 좋아요 수와 사용자의 좋아요 상태를 함께 반환
+- **프론트엔드 처리**: POST/DELETE 구분, 현재 상태 기반 호출 (LikeController 주석 참조)
+
+### 테스트 작성
+- **Repository 테스트**: `@DataJpaTest` 사용
+- **Service 테스트**: Mockito로 Repository mocking
+- **Controller 테스트**: `@WebMvcTest` + MockMvc 사용
+- 총 85개 테스트 존재, 새 기능 추가 시 테스트 작성 필수
+
+## 예외 처리 전략
+
+### HTTP 상태 코드 및 메시지
+프론트엔드 에러 케이스는 `EXCEPTION_CASE.md` 참조. 주요 에러:
+
+- **401 Unauthorized**: 인증 실패 (로그인 불일치, 비회원 접근)
+- **403 Forbidden**: 권한 없음 (타인의 리소스 수정/삭제)
+- **404 Not Found**: 리소스 없음 (삭제된 게시글 등)
+- **409 Conflict**: 중복 리소스 (이메일/닉네임 중복)
+- **500 Internal Server Error**: 서버 내부 오류
+
+### GlobalExceptionHandler 처리 방식
+모든 커스텀 예외는 `GlobalExceptionHandler`에서 일관된 `ErrorResponse` 형식으로 변환되어 반환됩니다.
+
+## 알려진 이슈 및 TODO
 
 ### Critical
-- [ ] AuthService/UserService/LikeService/FollowService: `IllegalArgumentException` → 커스텀 예외
-- [ ] UserController: 권한 검증 추가 (본인만 수정/삭제)
+- [x] **LikeService**: `IllegalArgumentException`, `IllegalStateException` → 커스텀 예외로 변경 완료
+- [x] **AuthService/UserService**: `IllegalArgumentException` → 커스텀 예외로 변경 완료
+- [x] **FollowService**: `IllegalArgumentException` → 커스텀 예외로 변경 완료
+- [ ] **UserController**: 권한 검증 추가 (본인만 수정/삭제)
+- [ ] **User.java**: `BaseEntity` 상속, `@Setter` 제거
 
 ### Enhancement
-- [ ] PostGetResponse에 likeCount, isLiked 필드 추가
-- [ ] CORS 설정 (프론트엔드 연결 시)
-- [ ] Hibernate DDL: 프로덕션 시 `validate`로 변경
+- [ ] **댓글 API**: 별도 엔드포인트 추가 (현재 PostResponse에만 포함)
+- [ ] **팔로우 기능**: FollowController, FollowService 구현
+- [ ] **CORS 설정**: 프론트엔드 연결 시 `ProjectSecurityConfig`에서 allowedOrigins 등 설정
+- [ ] **TagController**: 현재 비어있음, 태그 조회 API 추가 가능
+- [ ] **좋아요 토글 API**: 단일 엔드포인트로 POST/DELETE 통합 고려
+- [ ] **DDL 운영 모드**: 프로덕션에서 `validate`로 변경 (현재 `update`)

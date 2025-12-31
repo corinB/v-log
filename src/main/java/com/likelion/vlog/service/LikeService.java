@@ -4,6 +4,8 @@ import com.likelion.vlog.dto.like.LikeResponse;
 import com.likelion.vlog.entity.Like;
 import com.likelion.vlog.entity.Post;
 import com.likelion.vlog.entity.User;
+import com.likelion.vlog.exception.DuplicateException;
+import com.likelion.vlog.exception.NotFoundException;
 import com.likelion.vlog.repository.LikeRepository;
 import com.likelion.vlog.repository.PostRepository;
 import com.likelion.vlog.repository.UserRepository;
@@ -23,15 +25,15 @@ public class LikeService {
     // 좋아요 추가
     public LikeResponse addLike(String email, Long postId) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> NotFoundException.user(email));
 
         // 중복 체크
         if (likeRepository.existsByUserIdAndPostId(user.getId(), postId)) {
-            throw new IllegalStateException("이미 좋아요를 누른 게시글입니다.");
+            throw DuplicateException.like();
         }
 
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+                .orElseThrow(() -> NotFoundException.post(postId));
 
         Like like = Like.from(user, post);
         likeRepository.save(like);
@@ -41,7 +43,7 @@ public class LikeService {
 
         // 갱신된 Post 조회하여 likeCount 반환
         Post updatedPost = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+                .orElseThrow(() -> NotFoundException.post(postId));
 
         return LikeResponse.from(updatedPost.getLikeCount(),true);
     }
@@ -49,10 +51,10 @@ public class LikeService {
     // 좋아요 삭제
     public LikeResponse removeLike(String email, Long postId) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> NotFoundException.user(email));
 
         Like like = likeRepository.findByUserIdAndPostId(user.getId(), postId)
-                .orElseThrow(() -> new IllegalStateException("좋아요를 찾을 수 없습니다."));
+                .orElseThrow(NotFoundException::like);
 
         likeRepository.delete(like);
 
@@ -61,7 +63,7 @@ public class LikeService {
 
         // 갱신된 Post 조회하여 likeCount 반환
         Post updatedPost = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+                .orElseThrow(() -> NotFoundException.post(postId));
 
         return LikeResponse.from(updatedPost.getLikeCount(), false);
     }
@@ -73,7 +75,7 @@ public class LikeService {
         // 1. 전체 좋아요 수 (항상 조회)
         int count = postRepository.findById(postId)
                 .map(Post::getLikeCount)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+                .orElseThrow(() -> NotFoundException.post(postId));
 
         // 2. 비로그인 사용자
         if (email == null) {
@@ -82,7 +84,7 @@ public class LikeService {
 
         // 3. 로그인 사용자
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> NotFoundException.user(email));
 
 
         boolean checkLike = likeRepository.existsByUserIdAndPostId(user.getId(), postId);

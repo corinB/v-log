@@ -3,6 +3,7 @@ package com.likelion.vlog.service;
 import com.likelion.vlog.dto.auth.SignupRequest;
 import com.likelion.vlog.dto.users.UserGetResponse;
 import com.likelion.vlog.entity.User;
+import com.likelion.vlog.exception.DuplicateException;
 import com.likelion.vlog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -33,7 +34,7 @@ public class AuthService implements UserDetailsService {
     @Transactional
     public UserGetResponse signup(SignupRequest dto){
         if(userRepository.existsByEmail(dto.getEmail())){
-            throw new IllegalArgumentException("이미 존재하는 이메일");
+            throw DuplicateException.email(dto.getEmail());
         }
         User user = User.of(dto, passwordEncoder);
         userRepository.save(user);

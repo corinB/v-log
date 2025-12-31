@@ -50,24 +50,54 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 400 Bad Request - 잘못된 요청
+     * 401 Unauthorized - 인증되지 않은 접근 (로그인 필요)
      */
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException e) {
-        log.warn("IllegalArgumentException: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse(HttpStatus.BAD_REQUEST, e.getMessage()));
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorizedException(UnauthorizedException e) {
+        log.warn("UnauthorizedException: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(errorResponse(HttpStatus.UNAUTHORIZED, e.getMessage()));
     }
 
     /**
-     * 401 Unauthorized - 인증 실패
+     * 401 Unauthorized - 인증 정보 불일치 (비밀번호 오류 등)
+     */
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidCredentialsException(InvalidCredentialsException e) {
+        log.warn("InvalidCredentialsException: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(errorResponse(HttpStatus.UNAUTHORIZED, e.getMessage()));
+    }
+
+    /**
+     * 401 Unauthorized - Spring Security 인증 실패
      */
     @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleBadCredentialsException(
             org.springframework.security.authentication.BadCredentialsException e) {
         log.warn("BadCredentialsException: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(errorResponse(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다."));
+                .body(errorResponse(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 일치하지 않습니다."));
+    }
+
+    /**
+     * 400 Bad Request - 커스텀 잘못된 요청
+     */
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<Map<String, Object>> handleBadRequestException(BadRequestException e) {
+        log.warn("BadRequestException: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse(HttpStatus.BAD_REQUEST, e.getMessage()));
+    }
+
+    /**
+     * 400 Bad Request - IllegalArgumentException (레거시 지원)
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException e) {
+        log.warn("IllegalArgumentException: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse(HttpStatus.BAD_REQUEST, e.getMessage()));
     }
 
     /**

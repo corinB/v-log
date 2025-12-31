@@ -6,6 +6,7 @@ import com.likelion.vlog.dto.follows.FollowDeleteResponse;
 import com.likelion.vlog.dto.follows.FollowPostResponse;
 import com.likelion.vlog.entity.Follow;
 import com.likelion.vlog.entity.User;
+import com.likelion.vlog.exception.BadRequestException;
 import com.likelion.vlog.exception.DuplicateException;
 import com.likelion.vlog.exception.NotFoundException;
 import com.likelion.vlog.repository.FollowRepository;
@@ -41,7 +42,7 @@ public class FollowService {
 
         // 자기 자신을 팔로우할 수 없음
         if (follower.getId().equals(following.getId())) {
-            throw new IllegalArgumentException("자기 자신을 팔로우할 수 없습니다.");
+            throw BadRequestException.selfFollow();
         }
 
         // 이미 팔로우 중인지 확인
@@ -84,7 +85,8 @@ public class FollowService {
      * 팔로잉 조회
      */
     public Page<FollowingGetResponse> getFollowings(Long userId, Pageable pageable) {
-        User user = getUser(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> NotFoundException.user(userId));
 
         return followRepository.findByFollower(user, pageable)
                 .map(follow ->
@@ -99,7 +101,8 @@ public class FollowService {
      * 팔로워 조회
      */
     public Page<FollowerGetResponse> getFollowers(Long userId, Pageable pageable) {
-        User user = getUser(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> NotFoundException.user(userId));
 
         return followRepository.findByFollowing(user, pageable)
                 .map(follow -> {
@@ -109,12 +112,5 @@ public class FollowService {
 
                     return FollowerGetResponse.of(follower, isFollowing);
                 });
-    }
-
-    private User getUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
-
-        return user;
     }
 }
