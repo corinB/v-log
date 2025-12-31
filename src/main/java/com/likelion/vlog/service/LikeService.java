@@ -73,7 +73,7 @@ public class LikeService {
     public LikeResponse getLikeInfo(String email, Long postId) {
 
         // 1. 전체 좋아요 수 (항상 조회)
-        int count = postRepository.findById(postId)
+        Integer count = postRepository.findById(postId)
                 .map(Post::getLikeCount)
                 .orElseThrow(() -> NotFoundException.post(postId));
 

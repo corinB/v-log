@@ -3,11 +3,13 @@ package com.likelion.vlog.dto.comments;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * POST /api/v1/posts/{postId}/comments 요청 객체
  */
 @Getter
+@Setter
 @NoArgsConstructor
 public class CommentCreatePostRequest {
 

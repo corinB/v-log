@@ -16,4 +16,10 @@ public interface TagMapRepository extends JpaRepository<TagMap, Long> {
     @Modifying
     @Query("DELETE FROM TagMap tm WHERE tm.post = :post")
     void deleteAllByPost(@Param("post") Post post);
+
+    // 게시글 ID로 태그 매핑 삭제
+    void deleteAllByPostId(Long postId);
+
+    // User의 Blog에 속한 Post들의 모든 태그 매핑 삭제
+    void deleteAllByPostBlogUserId(Long userId);
 }

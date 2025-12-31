@@ -24,4 +24,13 @@ public class ForbiddenException extends RuntimeException {
     public static ForbiddenException userDelete() {
         return new ForbiddenException("회원 탈퇴 권한이 없습니다.");
     }
+
+    public static ForbiddenException commentUpdate() {
+        return new ForbiddenException("댓글 수정 권한이 없습니다.");
+    }
+
+    public static ForbiddenException commentDelete() {
+        return new ForbiddenException("댓글 삭제 권한이 없습니다.");
+    }
+
 }

@@ -35,4 +35,14 @@ public class NotFoundException extends RuntimeException {
         return new NotFoundException("좋아요를 찾을 수 없습니다.");
     }
 
+    public static NotFoundException comment(Long commentId) {return new NotFoundException("댓글을 찾을 수 없습니다. id=" + commentId);}
+
+    public static NotFoundException comment(Long postId, Long commentId) {
+        return new NotFoundException("해당 게시글의 댓글이 아닙니다. postId=" + postId + ", commentId=" + commentId);
+    }
+
+    public static NotFoundException reply(Long commentId, Long replyId) {
+        return new NotFoundException("해당 댓글의 답글이 아닙니다. , commentId=" + commentId + ", replyId=" + replyId);
+    }
+
 }

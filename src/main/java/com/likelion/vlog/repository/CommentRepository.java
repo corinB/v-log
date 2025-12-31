@@ -14,6 +14,14 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     int countByPost(Post post);
 
+    void deleteAllByPostId(Long postId);
+
+    // User가 작성한 모든 댓글 삭제
+    void deleteAllByUserId(Long userId);
+
+    // User의 Blog에 속한 Post들의 모든 댓글 삭제
+    void deleteAllByPostBlogUserId(Long userId);
+
     // N+1 해결: 여러 Post의 댓글 수를 한번에 조회
     @Query("SELECT c.post.id, COUNT(c) FROM Comment c WHERE c.post IN :posts GROUP BY c.post.id")
     List<Object[]> countByPosts(@Param("posts") List<Post> posts);

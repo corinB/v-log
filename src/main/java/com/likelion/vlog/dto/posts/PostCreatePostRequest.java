@@ -3,6 +3,7 @@ package com.likelion.vlog.dto.posts;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -10,6 +11,7 @@ import java.util.List;
  * POST /api/v1/posts 요청 객체
  */
 @Getter
+@Setter
 @NoArgsConstructor
 public class PostCreatePostRequest {
 

@@ -24,11 +24,14 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostRepositor
 
     // 좋아요 수 원자적 증가
     @Modifying
-    @Query("UPDATE Post p SET p.likeCount = p.likeCount + 1 WHERE p.id = :id")
+    @Query("UPDATE Post p SET p.likeCount = COALESCE(p.likeCount, 0) + 1 WHERE p.id = :id")
     void incrementLikeCount(@Param("id") Long id);
 
     // 좋아요 수 원자적 감소
     @Modifying
     @Query("UPDATE Post p SET p.likeCount = p.likeCount - 1 WHERE p.id = :id AND p.likeCount > 0")
     void decrementLikeCount(@Param("id") Long id);
+
+    // User의 Blog에 속한 모든 Post 삭제
+    void deleteAllByBlogUserId(Long userId);
 }

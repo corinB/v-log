@@ -64,7 +64,7 @@ public class CommentService {
 
         validateCommentBelongsToPost(comment, post);
         validateCommentIsNotReply(comment);
-        validateOwnership(comment, email);
+        validateOwnership(comment, email, true);
 
         comment.update(request.getContent());
 
@@ -81,7 +81,7 @@ public class CommentService {
 
         validateCommentBelongsToPost(comment, post);
         validateCommentIsNotReply(comment);
-        validateOwnership(comment, email);
+        validateOwnership(comment, email, false);
 
         commentRepository.delete(comment);
     }
@@ -116,7 +116,7 @@ public class CommentService {
 
         validateCommentBelongsToPost(parentComment, post);
         validateReplyBelongsToComment(reply, parentComment);
-        validateOwnership(reply, email);
+        validateOwnership(reply, email, true);
 
         reply.update(request.getContent());
 
@@ -134,7 +134,7 @@ public class CommentService {
 
         validateCommentBelongsToPost(parentComment, post);
         validateReplyBelongsToComment(reply, parentComment);
-        validateOwnership(reply, email);
+        validateOwnership(reply, email, false);
 
         commentRepository.delete(reply);
     }
@@ -153,30 +153,34 @@ public class CommentService {
 
     private Comment findCommentById(Long commentId) {
         return commentRepository.findById(commentId)
-                .orElseThrow(() -> new NotFoundException("댓글을 찾을 수 없습니다. id=" + commentId));
+                .orElseThrow(() -> NotFoundException.comment(commentId));
     }
 
     private void validateCommentBelongsToPost(Comment comment, Post post) {
         if (!comment.getPost().getId().equals(post.getId())) {
-            throw new NotFoundException("해당 게시글의 댓글이 아닙니다.");
+            throw NotFoundException.comment(post.getId(), comment.getId());
         }
     }
 
     private void validateCommentIsNotReply(Comment comment) {
         if (comment.getParent() != null) {
-            throw new NotFoundException("댓글을 찾을 수 없습니다. id=" + comment.getId());
+            throw NotFoundException.comment(comment.getId());
         }
     }
 
     private void validateReplyBelongsToComment(Comment reply, Comment parentComment) {
         if (reply.getParent() == null || !reply.getParent().getId().equals(parentComment.getId())) {
-            throw new NotFoundException("해당 댓글의 답글이 아닙니다.");
+            throw NotFoundException.reply(parentComment.getId(), reply.getId());
         }
     }
 
-    private void validateOwnership(Comment comment, String email) {
+    private void validateOwnership(Comment comment, String email, boolean isUpdate) {
         if (!comment.getUser().getEmail().equals(email)) {
-            throw new ForbiddenException("댓글 수정/삭제 권한이 없습니다.");
+            if (isUpdate) {
+                throw ForbiddenException.commentUpdate();
+            } else {
+                throw ForbiddenException.commentDelete();
+            }
         }
     }
 }

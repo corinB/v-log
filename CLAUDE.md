@@ -19,6 +19,21 @@ docker-compose down                # MySQL 중지
 
 ## 환경 설정
 
+### 사전 요구사항
+- Java 21
+- MySQL 8.0 (또는 Docker)
+
+### 데이터베이스 설정
+**옵션 A: 로컬 MySQL 사용**
+- MySQL에서 `vlog` 데이터베이스 생성
+- `application.yaml` 설정 확인
+
+**옵션 B: Docker 사용**
+```bash
+docker-compose up -d  # MySQL 시작 (port 13306)
+# application.yaml 포트를 13306으로 변경 필요
+```
+
 **application.yaml** 기본 설정:
 - DB URL: `jdbc:mysql://localhost:3306/vlog`
 - DB User: `root` / Password: `1111`
@@ -243,9 +258,7 @@ DTOs는 도메인별로 하위 패키지 구성:
 
 ## 알려진 이슈 및 TODO
 
-> 상세 내용은 `docs/CODE_REVIEW.md` 참조
-
-### Critical (즉시 수정 필요)
+### Critical
 - [x] **LikeService**: `IllegalArgumentException`, `IllegalStateException` → 커스텀 예외로 변경 완료
 - [x] **AuthService/UserService**: `IllegalArgumentException` → 커스텀 예외로 변경 완료
 - [x] **FollowService**: `IllegalArgumentException` → 커스텀 예외로 변경 완료
@@ -273,3 +286,26 @@ DTOs는 도메인별로 하위 패키지 구성:
 - [ ] **Swagger @Parameter 누락**: 컨트롤러 파라미터에 설명 추가 필요
 - [ ] **삭제 응답 통일**: PostController(204) vs CommentController(200) → 204로 통일
 - [ ] **DDL 운영 모드**: 프로덕션에서 `validate`로 변경 (현재 `update`)
+#### 15. API 버전 관리 전략
+- **해결**: 헤더 기반 버전 관리 또는 URL 분리
+
+#### 16. 프로파일 전략 개선
+- **해결**: `application-dev.yaml`, `application-prod.yaml` 분리
+
+### Enhancement (기능 추가)
+- [ ] **팔로우 기능**: FollowController, FollowService 구현
+- [ ] **CORS 설정**: 프론트엔드 연결 시 `ProjectSecurityConfig`에서 allowedOrigins 등 설정
+- [ ] **TagController**: 현재 비어있음, 태그 조회 API 추가 가능
+- [ ] **좋아요 토글 API**: 단일 엔드포인트로 POST/DELETE 통합 고려
+
+## 우선순위 매트릭스
+
+| 우선순위 | 개선 항목 | 영향도 | 난이도 |
+|---------|----------|-------|-------|
+| Critical | CSRF 보호 활성화 | ⚠️⚠️⚠️ | 낮음 |
+| Critical | DB 비밀번호 환경변수화 | ⚠️⚠️⚠️ | 낮음 |
+| Critical | DDL Auto 환경별 분리 | ⚠️⚠️⚠️ | 낮음 |
+| High | N+1 쿼리 해결 | ⚡⚡⚡ | 중간 |
+| High | 데이터베이스 인덱스 추가 | ⚡⚡⚡ | 낮음 |
+| High | 동시성 제어 추가 | ⚡⚡ | 중간 |
+| High | 트랜잭션 범위 최적화 | ⚡⚡ | 중간 |

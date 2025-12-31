@@ -29,6 +29,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final BlogRepository blogRepository;
     private final CommentRepository commentRepository;
+    private final LikeRepository likeRepository;
 
     /**
      * 게시글 목록 조회 (페이징 + 필터링)
@@ -149,7 +150,12 @@ public class PostService {
             throw ForbiddenException.postDelete();
         }
 
-        tagMapRepository.deleteAllByPost(post);
+        // 연관 데이터 먼저 삭제 (FK 제약조건 때문)
+        commentRepository.deleteAllByPostId(postId);
+        likeRepository.deleteAllByPostId(postId);
+        tagMapRepository.deleteAllByPostId(postId);
+
+        // Post 삭제
         postRepository.delete(post);
     }
 
