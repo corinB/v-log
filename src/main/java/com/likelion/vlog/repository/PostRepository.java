@@ -32,6 +32,12 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostRepositor
     @Query("UPDATE Post p SET p.likeCount = p.likeCount - 1 WHERE p.id = :id AND p.likeCount > 0")
     void decrementLikeCount(@Param("id") Long id);
 
+    // 조회수 원자적 증가
+    // clearAutomatically = true: 영속성 컨텍스트를 자동으로 클리어하여 최신 데이터 조회 보장
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.viewCount = COALESCE(p.viewCount, 0) + 1 WHERE p.id = :id")
+    void incrementViewCount(@Param("id") Long id);
+
     // User의 Blog에 속한 모든 Post 삭제
     void deleteAllByBlogUserId(Long userId);
 }

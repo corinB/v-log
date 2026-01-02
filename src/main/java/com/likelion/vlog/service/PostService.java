@@ -73,9 +73,18 @@ public class PostService {
     /**
      * 게시글 상세 조회
      * - 댓글/대댓글 포함
+     * - 조회수 증가
      */
+    @Transactional
     public PostGetResponse getPost(Long postId) {
         Post post = postRepository.findById(postId)
+                .orElseThrow(() -> NotFoundException.post(postId));
+
+        // 조회수 증가
+        postRepository.incrementViewCount(postId);
+
+        // 조회수 증가 후 다시 조회하여 최신 조회수 반영
+        post = postRepository.findById(postId)
                 .orElseThrow(() -> NotFoundException.post(postId));
 
         List<String> tags = getTagNames(post);

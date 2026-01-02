@@ -20,6 +20,7 @@ public class PostGetResponse {
     private AuthorResponse author;
     private List<String> tags;
     private List<CommentWithRepliesGetResponse> comments;
+    private Integer viewCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -34,6 +35,7 @@ public class PostGetResponse {
                 .author(AuthorResponse.from(post.getBlog().getUser()))
                 .tags(tags)
                 .comments(comments)
+                .viewCount(post.getViewCount())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();
