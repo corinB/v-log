@@ -60,16 +60,16 @@ Spring Boot 3.5.9 / Java 21 / JPA + QueryDSL + MySQL / Spring Security (세션 �
 v-log/
 ├── backend/vlog/                    # Spring Boot 백엔드
 │   └── src/main/java/com/likelion/vlog/
-│       ├── config/                  # ProjectSecurityConfig, SwaggerConfig, JpaConfig
-│       ├── controller/              # REST API 컨트롤러
+│       ├── config/                  # ProjectSecurityConfig, CorsConfig, SwaggerConfig, JpaConfig, appConfig
+│       ├── controller/              # REST API 컨트롤러 (Auth, Post, User, Comment, Like, Follow, Tag, Health)
 │       ├── service/                 # 비즈니스 로직
 │       ├── repository/
 │       │   ├── querydsl/
 │       │   │   ├── custom/          # Custom interface & implementations
-│       │   │   └── expresion/       # QueryDSL expression helpers (PostExpression, TagMapExpression)
+│       │   │   └── expresion/       # QueryDSL expression helpers (PostExpression) - 주의: 패키지명 오타
 │       │   └── *.java               # Standard JPA repositories
 │       ├── dto/                     # Request/Response DTOs (도메인별 패키지)
-│       ├── enums/                   # SearchField, SortField, SortOrder, TagMode
+│       ├── enums/                   # SearchFiled (오타), SortField, TagMode
 │       ├── exception/               # 커스텀 예외 및 GlobalExceptionHandler
 │       └── entity/                  # JPA 엔티티 (User, Blog, Post, Comment, Tag, TagMap, Like, Follow)
 └── front-end/v-log-front/           # React 프론트엔드 (별도 관리)
@@ -87,21 +87,21 @@ v-log/
 | PUT | `/api/v1/posts/{id}` | 수정 | O (작성자) |
 | DELETE | `/api/v1/posts/{id}` | 삭제 | O (작성자) |
 
-### 인증 (`/auth`)
+### 인증 (`/api/v1/auth`)
 
 | Method | Endpoint | 설명 | 인증 |
 |--------|----------|------|------|
-| POST | `/auth/signup` | 회원가입 | X |
-| POST | `/auth/login` | 로그인 | X |
-| POST | `/auth/logout` | 로그아웃 | O |
+| POST | `/api/v1/auth/signup` | 회원가입 | X |
+| POST | `/api/v1/auth/login` | 로그인 | X |
+| POST | `/api/v1/auth/logout` | 로그아웃 | O |
 
-### 사용자 (`/users`)
+### 사용자 (`/api/v1/users`)
 
 | Method | Endpoint | 설명 | 인증 |
 |--------|----------|------|------|
-| GET | `/users/{id}` | 조회 | X |
-| PUT | `/users/{id}` | 수정 | O |
-| DELETE | `/users/{id}` | 탈퇴 | O |
+| GET | `/api/v1/users/{id}` | 조회 | X |
+| PUT | `/api/v1/users/{id}` | 수정 | O |
+| DELETE | `/api/v1/users/{id}` | 탈퇴 | O |
 
 ### 좋아요 (`/api/v1/posts/{postId}/like`)
 
@@ -178,26 +178,67 @@ User (1) ── (1) Blog (1) ── (*) Post ── (*) TagMap ── (1) Tag
 
 ### QueryDSL 동적 쿼리 패턴
 - **Custom Repository**: `PostRepositoryCustom` 인터페이스 + `PostRepositoryImpl` 구현체
-- **Expression Helper**: `PostExpression`, `TagMapExpression`으로 재사용 가능한 조건 추상화
+- **Expression Helper**: `PostExpression`으로 재사용 가능한 조건 추상화 (TagMap 조건 포함)
 - **복합 검색**: `PostGetRequest`로 keyword, tag, blogId, 정렬, 페이징을 한 번에 처리
 - **Enum 기반 설정**:
-  - `SearchField`: BLOG, NICKNAME, TITLE (검색 대상 필드)
-  - `SortField`: CREATED_AT, LIKE_COUNT (정렬 기준)
-  - `SortOrder`: ASC, DESC (정렬 방향)
-  - `TagMode`: OR, AND (태그 필터 모드)
+  - `SearchFiled` (오타 주의): BLOG, NICKNAME, TITLE (검색 대상 필드)
+  - `SortField`: VIEW, LIKE, CREATED_AT, UPDATED_AT (정렬 기준)
+  - `TagMode`: AND, OR, NAND (태그 필터 모드 - AND: 모든 태그 포함, OR: 하나라도 포함, NAND: 모든 태그 제외)
+
+**주의**: `SortOrder` enum은 존재하지 않음. `PostGetRequest`의 `boolean asc` 필드로 정렬 방향 결정
 
 ### DTO 구조
 DTOs는 도메인별로 하위 패키지 구성:
 - `dto/auth/`: 인증 관련 (SignupRequest, LoginRequest)
-- `dto/posts/`: 게시글 관련 (PostGetRequest, PostCreatePostRequest, PostUpdatePutRequest, PostListGetResponse, PostGetResponse, PageResponse)
+- `dto/posts/`: 게시글 관련 (PostGetRequest, PostCreatePostRequest, PostUpdatePutRequest, PostListGetResponse, PostGetResponse, AuthorResponse, CommentResponse, PageResponse)
 - `dto/comments/`: 댓글 관련 (CommentCreatePostRequest, CommentUpdatePutRequest, CommentPostResponse, CommentPutResponse, CommentWithRepliesGetResponse, ReplyCreatePostRequest, ReplyUpdatePutRequest, ReplyPostResponse, ReplyPutResponse, ReplyGetResponse)
 - `dto/like/`: 좋아요 관련 (LikeResponse)
 - `dto/follows/`: 팔로우 관련 (FollowPostResponse, FollowDeleteResponse, FollowerGetResponse, FollowingGetResponse, PageResponse)
-- `dto/users/`: 사용자 관련 (UserGetResponse, UserUpdateRequest, UserDeleteRequest)
+- `dto/users/`: 사용자 관련 (UserGetResponse, UserUpdateRequest, UserUpdateResponse, UserDeleteRequest)
 - `dto/tags/`: 태그 관련 (TagGetResponse)
 - `dto/common/`: 공통 응답 (ApiResponse)
 
 **주의**: PageResponse가 `dto/posts/`와 `dto/follows/`에 중복 정의되어 있음 → `dto/common/`으로 통합 필요
+
+## 알려진 코드 이슈
+
+### 네이밍 및 타이포 (수정 권장)
+1. **SearchFiled.java**: `SearchField`여야 하지만 `SearchFiled`로 오타 (enums 패키지)
+   - 파일 위치: `src/main/java/com/likelion/vlog/enums/SearchFiled.java`
+   - 영향 범위: PostGetRequest, PostExpression, appConfig에서 참조
+
+2. **appConfig.java**: Java 네이밍 컨벤션 위반, `AppConfig`로 수정 필요 (config 패키지)
+   - 파일 위치: `src/main/java/com/likelion/vlog/config/appConfig.java`
+   - 클래스명은 PascalCase 사용 필요
+
+3. **repository/querydsl/expresion**: `expression`이어야 하지만 `expresion`으로 오타
+   - 패키지 위치: `src/main/java/com/likelion/vlog/repository/querydsl/expresion/`
+   - 포함 파일: PostExpression.java
+
+4. **User.upDateInfo()**: `updateInfo()`여야 하지만 `upDateInfo()`로 오타
+   - 파일 위치: `src/main/java/com/likelion/vlog/entity/User.java:41`
+   - UserService에서 호출 중
+
+### 불필요한 Import (정리 권장)
+1. **Blog.java**: `import lombok.Setter;` - 실제 사용하지 않음
+   - 파일 위치: `src/main/java/com/likelion/vlog/entity/Blog.java:7`
+
+2. **User.java**: Hibernate 시간 어노테이션 import - 실제 사용하지 않음
+   - `import org.hibernate.annotations.CurrentTimestamp;` (라인 7)
+   - `import org.hibernate.annotations.UpdateTimestamp;` (라인 8)
+   - BaseEntity의 JPA Auditing(`@CreatedDate`, `@LastModifiedDate`)만 사용 중
+
+### 중복 코드
+1. **PageResponse 중복 정의**:
+   - `dto/posts/PageResponse.java`: Builder 패턴, 정적 팩토리 메서드 포함 (더 완전한 구현)
+   - `dto/follows/PageResponse.java`: AllArgsConstructor만 사용 (간단한 구현)
+   - **권장**: `dto/common/PageResponse.java`로 통합, posts 버전이 더 완전하므로 해당 구현 사용
+
+### 문서와 코드 불일치 (이 문서의 과거 버전)
+- ~~TagMapExpression.java~~: 존재하지 않음, PostExpression에 통합됨
+- ~~SortOrder enum~~: 존재하지 않음, PostGetRequest의 `boolean asc` 필드 사용
+- ~~TagController 비어있음~~: 실제로는 구현되어 있음 (GET /api/v1/tags/{title})
+- ~~CommentService 정적 팩토리 미사용~~: 실제로는 올바르게 사용 중
 
 ## 구현 현황
 
@@ -210,6 +251,8 @@ DTOs는 도메인별로 하위 패키지 구성:
 - 댓글/답글 CRUD (CommentController, CommentService)
 - 팔로우/언팔로우 (FollowController, FollowService)
 - 태그 조회 (TagController, TagService)
+- 헬스 체크 (HealthController) - EC2 배포용 /health 엔드포인트
+- CORS 설정 (CorsConfig) - 프론트엔드 연동 지원
 - Swagger UI (springdoc-openapi)
 
 ## 구현 가이드
@@ -236,11 +279,11 @@ DTOs는 도메인별로 하위 패키지 구성:
 1. `repository/querydsl/custom/` 에 `XxxRepositoryCustom` 인터페이스 생성
 2. 같은 패키지에 `XxxRepositoryImpl` 구현체 생성 (이름 규칙 필수)
 3. 기본 JPA Repository가 Custom 인터페이스 상속: `interface XxxRepository extends JpaRepository, XxxRepositoryCustom`
-4. `repository/querydsl/expresion/` 에 재사용 가능한 BooleanExpression 메서드 작성
+4. `repository/querydsl/expresion/` 에 재사용 가능한 BooleanExpression 메서드 작성 (주의: 패키지명 오타)
 5. 복잡한 동적 쿼리는 Expression Helper 활용하여 가독성 향상
 
 ### 좋아요 구현 패턴 (참고)
-- **중복 체크**: `existsByUserIdAndPostId`로 추가 전 검증, 중복 시 `IllegalStateException`
+- **중복 체크**: `existsByUserIdAndPostId`로 추가 전 검증, 중복 시 `DuplicateException.like()`
 - **원자적 연산**: `@Modifying @Query`로 좋아요 수 증가/감소 (동시성 안전)
 - **반환값**: 최신 좋아요 수와 사용자의 좋아요 상태를 함께 반환
 - **프론트엔드 처리**: POST/DELETE 구분, 현재 상태 기반 호출 (LikeController 주석 참조)
@@ -271,10 +314,10 @@ DTOs는 도메인별로 하위 패키지 구성:
 - [x] **LikeService**: `IllegalArgumentException`, `IllegalStateException` → 커스텀 예외로 변경 완료
 - [x] **AuthService/UserService**: `IllegalArgumentException` → 커스텀 예외로 변경 완료
 - [x] **FollowService**: `IllegalArgumentException` → 커스텀 예외로 변경 완료
-- [ ] **UserController 보안**: `@AuthenticationPrincipal` 누락 - 아무나 다른 사용자 수정/삭제 가능
-- [ ] **CORS 미설정**: `ProjectSecurityConfig`에 CORS 설정 추가 필요 (허용 도메인: `localhost:3000`)
-- [ ] **Blog.java**: `@Setter` 사용 중 - 제거 필요 (CLAUDE.md 원칙 위반)
-- [ ] **User.java**: Hibernate 시간 어노테이션(`@CurrentTimestamp`, `@UpdateTimestamp`)과 JPA Auditing 충돌 - Hibernate 어노테이션 제거 필요
+- [x] **UserController 보안**: `@AuthenticationPrincipal` 모든 필수 메서드에 적용 완료, Service 레이어에서 권한 검증 구현
+- [x] **CORS 설정 완료**: `CorsConfig` 클래스로 구현, `ProjectSecurityConfig`에 통합 완료
+- [ ] **Blog.java**: `@Setter` import 존재 (미사용) - 불필요한 import 제거 필요
+- [ ] **User.java**: Hibernate 어노테이션 import 존재 (미사용) - 불필요한 import 제거 필요
 
 ### High Priority
 - [ ] **LikeService @Transactional**: 클래스 레벨 `@Transactional` → `@Transactional(readOnly = true)`로 변경
@@ -284,11 +327,13 @@ DTOs는 도메인별로 하위 패키지 구성:
 - [ ] **FollowService N+1**: getFollowers에서 각 팔로워마다 추가 쿼리 발생 → QueryDSL로 개선
 
 ### Medium Priority
-- [ ] **CommentService 예외**: NotFoundException, ForbiddenException 정적 팩토리 미사용
 - [ ] **PageResponse 중복**: `dto/posts/`와 `dto/follows/`에 중복 → `dto/common/`으로 통합
 - [ ] **PostController 응답 불일치**: getPosts만 ApiResponse 래핑 없이 반환 → 통일 필요
 - [ ] **User.upDateInfo() 오타**: `upDateInfo` → `updateInfo`로 수정
 - [ ] **TagService null 처리**: `orElse(null)` → `NotFoundException.tag(tagName)` 발생
+- [ ] **SearchFiled 오타**: `SearchFiled.java` → `SearchField.java`로 클래스명 수정 (enums 패키지)
+- [ ] **appConfig 네이밍**: `appConfig.java` → `AppConfig.java`로 클래스명 수정 (Java 네이밍 컨벤션)
+- [ ] **querydsl/expresion 오타**: 패키지명 `expresion` → `expression`으로 수정
 
 ### Low Priority
 - [ ] **코드 중복 제거**: User/Post 조회 로직, FollowController PageResponse 구성 중복
@@ -302,9 +347,6 @@ DTOs는 도메인별로 하위 패키지 구성:
 - **해결**: `application-dev.yaml`, `application-prod.yaml` 분리
 
 ### Enhancement (기능 추가)
-- [ ] **팔로우 기능**: FollowController, FollowService 구현
-- [ ] **CORS 설정**: 프론트엔드 연결 시 `ProjectSecurityConfig`에서 allowedOrigins 등 설정
-- [ ] **TagController**: 현재 비어있음, 태그 조회 API 추가 가능
 - [ ] **좋아요 토글 API**: 단일 엔드포인트로 POST/DELETE 통합 고려
 
 ## 우선순위 매트릭스
