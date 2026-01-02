@@ -7,14 +7,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # 빌드 및 실행
 ./gradlew build                    # 전체 빌드
-./gradlew bootRun                  # 애플리케이션 실행
+./gradlew bootRun                  # 애플리케이션 실행 (http://localhost:8080)
 ./gradlew test                     # 전체 테스트 실행
 ./gradlew test --tests ClassName  # 특정 테스트 클래스 실행
 ./gradlew clean build              # 클린 빌드
 
+# QueryDSL Q-class 생성 (build/generated/sources/annotationProcessor/java/main)
+./gradlew clean compileJava        # Q-class 재생성이 필요한 경우
+
 # 데이터베이스
 docker-compose up -d               # MySQL 시작 (port 13306)
 docker-compose down                # MySQL 중지
+
+# API 문서 (애플리케이션 실행 후)
+# Swagger UI: http://localhost:8080/swagger-ui/index.html
 ```
 
 ## 환경 설정
@@ -48,22 +54,25 @@ docker-compose up -d  # MySQL 시작 (port 13306)
 
 Spring Boot 3.5.9 / Java 21 / JPA + QueryDSL + MySQL / Spring Security (세션 기반)
 
-## 패키지 구조
+## 프로젝트 구조
 
 ```
-com.likelion.vlog
-├── config/          # ProjectSecurityConfig, SwaggerConfig, JpaConfig
-├── controller/      # PostController, CommentController, LikeController, FollowController, AuthController, UserController, TagController
-├── service/         # PostService, CommentService, LikeService, FollowService, AuthService, UserService, TagService
-├── repository/
-│   ├── querydsl/    # QueryDSL custom repositories (PostRepositoryCustom, PostRepositoryImpl)
-│   │   ├── custom/  # Custom interface & implementations
-│   │   └── expresion/ # QueryDSL expression helpers (PostExpression, TagMapExpression)
-│   └── *.java       # Standard JPA repositories
-├── dto/             # Request/Response DTOs (도메인별 패키지 구조)
-├── enums/           # SearchField, SortField, SortOrder, TagMode
-├── exception/       # NotFoundException, ForbiddenException, DuplicateException, GlobalExceptionHandler
-└── entity/          # User, Blog, Post, Comment, Tag, TagMap, Like, Follow
+v-log/
+├── backend/vlog/                    # Spring Boot 백엔드
+│   └── src/main/java/com/likelion/vlog/
+│       ├── config/                  # ProjectSecurityConfig, SwaggerConfig, JpaConfig
+│       ├── controller/              # REST API 컨트롤러
+│       ├── service/                 # 비즈니스 로직
+│       ├── repository/
+│       │   ├── querydsl/
+│       │   │   ├── custom/          # Custom interface & implementations
+│       │   │   └── expresion/       # QueryDSL expression helpers (PostExpression, TagMapExpression)
+│       │   └── *.java               # Standard JPA repositories
+│       ├── dto/                     # Request/Response DTOs (도메인별 패키지)
+│       ├── enums/                   # SearchField, SortField, SortOrder, TagMode
+│       ├── exception/               # 커스텀 예외 및 GlobalExceptionHandler
+│       └── entity/                  # JPA 엔티티 (User, Blog, Post, Comment, Tag, TagMap, Like, Follow)
+└── front-end/v-log-front/           # React 프론트엔드 (별도 관리)
 ```
 
 ## API 엔드포인트

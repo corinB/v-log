@@ -17,12 +17,15 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
+import org.springframework.web.cors.CorsConfigurationSource;
+
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @RequiredArgsConstructor
 public class ProjectSecurityConfig {
 
+    private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     public HttpSessionEventPublisher httpSessionEventPublisher() {
@@ -34,6 +37,9 @@ public class ProjectSecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable());
+
+        // CORS 설정 적용 (CorsConfig에서 주입)
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource));
 
         http.authorizeHttpRequests(auth -> auth
                         // 인증 X
