@@ -54,6 +54,10 @@ public class ProjectSecurityConfig {
                                 "/api/v1/auth/login" //로그인
                         ).permitAll()
 
+                        .requestMatchers(HttpMethod.GET,
+                                "/health"  // 헬스 체크 엔드포인트 (EC2 모니터링용)
+                        ).permitAll()
+
                 .requestMatchers(HttpMethod.GET,
                         "/api/v1/users/*",      // 사용자 프로필 조회
                         "/api/v1/posts",        // 전체 게시글 조회
