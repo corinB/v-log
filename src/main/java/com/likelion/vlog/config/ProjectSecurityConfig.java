@@ -55,6 +55,7 @@ public class ProjectSecurityConfig {
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.GET,
+                                "/",       // 루트 경로
                                 "/health"  // 헬스 체크 엔드포인트 (EC2 모니터링용)
                         ).permitAll()
 
