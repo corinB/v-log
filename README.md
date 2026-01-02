@@ -218,11 +218,11 @@ Comment reply = Comment.createReply(user, post, parent, content);
 return ResponseEntity.ok(ApiResponse.success("메시지", data));
 
 // 생성
-return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.CREATED)
     .body(ApiResponse.success("생성 성공", data));
 
 // 삭제
-return ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().build();
 ```
 
 > 상세 컨벤션: [docs/v-log-dto-convention.md](docs/v-log-dto-convention.md)
