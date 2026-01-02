@@ -30,7 +30,7 @@ jobs:
           ./gradlew clean build -x test
           
           
-          # 4. Docker Hub 로그인
+        # 4. Docker Hub 로그인
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -40,20 +40,18 @@ jobs:
       # 5. Backend 이미지 빌드 & 푸시
       - name: Build & Push Backend Image
         run: |
-          cd backend
           docker build -t ${{ secrets.DOCKER_USERNAME }}/vlog-backend:latest .
           docker build -t ${{ secrets.DOCKER_USERNAME }}/vlog-backend:${{ github.sha }} .
           docker push ${{ secrets.DOCKER_USERNAME }}/vlog-backend:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/vlog-backend:${{ github.sha }}
 
-      # 6. Frontend 이미지 빌드 & 푸시
-      - name: Build & Push Frontend Image
-        run: |
-          cd frontend
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/vlog-frontend:latest .
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/vlog-frontend:${{ github.sha }} .
-          docker push ${{ secrets.DOCKER_USERNAME }}/vlog-frontend:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/vlog-frontend:${{ github.sha }}
+#      # 6. Frontend 이미지 빌드 & 푸시
+#      - name: Build & Push Frontend Image
+#        run: |
+#          docker build -t ${{ secrets.DOCKER_USERNAME }}/vlog-frontend:latest .
+#          docker build -t ${{ secrets.DOCKER_USERNAME }}/vlog-frontend:${{ github.sha }} .
+#          docker push ${{ secrets.DOCKER_USERNAME }}/vlog-frontend:latest
+#          docker push ${{ secrets.DOCKER_USERNAME }}/vlog-frontend:${{ github.sha }}
 
       # 7. EC2 배포
       - name: Deploy to EC2
