@@ -1,0 +1,37 @@
+# Git
+.git
+.gitignore
+.github
+
+# Gradle
+.gradle
+build
+!gradle/wrapper
+*.gradle.kts.swp
+
+# IDE
+.idea
+*.iml
+*.iws
+.vscode
+.DS_Store
+
+# Node
+node_modules
+
+# Documentation
+docs
+README.md
+HELP.md
+CLAUDE.md
+
+# Local configuration
+.env
+.env.local
+
+# Logs
+*.log
+
+# Test reports
+test-results
+coverage

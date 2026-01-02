@@ -1,8 +1,7 @@
 spring:
   application:
     name: vlog
-  profiles:
-    active: local
+  # profiles.active removed - must be explicitly set via SPRING_PROFILES_ACTIVE environment variable
 
 server:
   port: 8080

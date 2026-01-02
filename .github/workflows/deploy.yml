@@ -71,8 +71,20 @@ jobs:
             echo "Starting new containers..."
             docker-compose up -d
 
-            echo "Waiting for services to start..."
-            sleep 20
+            echo "Waiting for application to be healthy..."
+            for i in {1..30}; do
+              if docker-compose ps | grep -q "healthy"; then
+                echo "Application is healthy!"
+                break
+              fi
+              if [ $i -eq 30 ]; then
+                echo "Health check failed after 5 minutes"
+                docker-compose logs --tail 50
+                exit 1
+              fi
+              echo "Attempt $i/30: Waiting for health check..."
+              sleep 10
+            done
 
             echo "Container Status:"
             docker-compose ps
