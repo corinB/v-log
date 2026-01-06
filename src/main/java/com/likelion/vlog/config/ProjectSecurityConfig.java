@@ -16,6 +16,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.web.authentication.session.ConcurrentSessionControlAuthenticationStrategy;
+import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
+import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.security.web.authentication.session.CompositeSessionAuthenticationStrategy;
+
+import java.util.Arrays;
 
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -33,7 +41,29 @@ public class ProjectSecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
+    @Bean
+    public SessionAuthenticationStrategy sessionAuthenticationStrategy(SessionRegistry sessionRegistry) {
+        // 동시 세션 제어
+        ConcurrentSessionControlAuthenticationStrategy concurrentStrategy =
+                new ConcurrentSessionControlAuthenticationStrategy(sessionRegistry);
+        concurrentStrategy.setMaximumSessions(1);  // 최대 1개 세션
+        concurrentStrategy.setExceptionIfMaximumExceeded(false);  // 기존 세션 만료
+
+        // 세션 등록 전략
+        RegisterSessionAuthenticationStrategy registerStrategy =
+                new RegisterSessionAuthenticationStrategy(sessionRegistry);
+
+        return new CompositeSessionAuthenticationStrategy(
+                Arrays.asList(concurrentStrategy, registerStrategy)
+        );
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, SessionRegistry sessionRegistry) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable());
@@ -121,6 +151,9 @@ public class ProjectSecurityConfig {
 
         http.sessionManagement(session -> session
                 .sessionFixation().migrateSession()
+                .maximumSessions(1)  // 동시 세션 1개로 제한
+                .maxSessionsPreventsLogin(false)  // false: 새 로그인 시 기존 세션 만료, true: 새 로그인 차단
+                .sessionRegistry(sessionRegistry)  // SessionRegistry 연결
         );
 
         // 인증 실패 에러 처리

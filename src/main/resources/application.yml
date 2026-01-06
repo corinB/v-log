@@ -1,7 +1,35 @@
 spring:
   application:
     name: vlog
-  # profiles.active removed - must be explicitly set via SPRING_PROFILES_ACTIVE environment variable
+  datasource:
+    url: jdbc:mysql://localhost:3306/vlog
+    username: root
+    password: 1111
+
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+# CORS Configuration
+cors:
+  allowed-origins: http://localhost:3000               # 허용할 프론트엔드 주소 (쉼표로 여러 개 가능)
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS        # 허용할 HTTP 메서드
+  allowed-headers: "*"                                # 허용할 요청 헤더 (* = 모두 허용)
+  exposed-headers: "*"                                # 프론트엔드에 노출할 응답 헤더 (* = 모두 노출)
+  allow-credentials: true                             # 쿠키/세션 전송 허용 (true 필수: 세션 인증 사용)
+  max-age: 3600                                       # Preflight 요청 캐시 시간 (초 단위, 3600 = 1시간)
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
 
 server:
+  servlet:
+    session:
+      timeout: 1d
   port: 8080
